@@ -2,1257 +2,1074 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>EcoRoute v2 — Pollution-Smart Navigation</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>EcoRoute · The Living Atlas</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <style>
-:root{
-  --pr:#0A2540;--safe:#00C896;--mod:#F59E0B;--haz:#EF4444;
-  --noise-safe:#3B82F6;--noise-mod:#8B5CF6;--noise-haz:#EC4899;
-  --bg:#0F1923;--sf:#131F2E;--card:rgba(20,32,48,0.95);
-  --border:rgba(255,255,255,0.08);--text:#E8F0FE;--muted:rgba(232,240,254,0.45);
-  --sh:0 4px 24px rgba(0,0,0,0.4);--shl:0 8px 40px rgba(0,0,0,0.6);
-  --radius:14px;--r-sm:9px;--accent:#00C896;
+/* ─── DESIGN TOKENS ─── */
+:root {
+  --surface:          #edf8ff;
+  --surface-bright:   #f5fbff;
+  --surface-low:      #e0f4ff;
+  --surface-container:#cbedff;
+  --surface-high:     #c0e9fd;
+  --surface-highest:  #b8e3f9;
+  --surface-lowest:   #ffffff;
+  --on-surface:       #14323e;
+  --on-surface-var:   #435f6d;
+  --outline:          #5e7b89;
+  --outline-var:      #94b2c1;
+  --primary:          #006a2b;
+  --primary-dim:      #005d24;
+  --primary-container:#86f898;
+  --on-primary:       #cfffcf;
+  --on-primary-cont:  #005d25;
+  --secondary:        #765600;
+  --secondary-dim:    #674b00;
+  --secondary-cont:   #ffca53;
+  --on-secondary-cont:#5d4300;
+  --tertiary:         #b41a14;
+  --tertiary-dim:     #a30709;
+  --tertiary-cont:    #ff9384;
+  --on-tertiary-cont: #690002;
+  --error:            #b02500;
+  --error-cont:       #f95630;
+  --r: 1rem;
+  --r-lg: 1.5rem;
+  --r-xl: 2rem;
+  --r-full: 9999px;
 }
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
-.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 22;}
 
-/* TOPBAR */
-.tb{height:56px;background:rgba(10,37,64,0.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:1000;flex-shrink:0;}
-.logo{display:flex;align-items:center;gap:10px;}
-.lm{width:32px;height:32px;background:linear-gradient(135deg,var(--safe),#0EA5E9);border-radius:9px;display:flex;align-items:center;justify-content:center;}
-.lm span{color:#fff;font-size:17px;}
-.logo h1{font-size:.95rem;font-weight:700;letter-spacing:-.03em;color:var(--text);}
-.logo small{font-size:.55rem;font-weight:500;color:var(--muted);background:rgba(0,200,150,0.15);border:1px solid rgba(0,200,150,0.3);border-radius:999px;padding:1px 6px;margin-left:4px;}
-.srch-wrap{position:relative;flex:1;max-width:480px;margin:0 12px;}
-.srch{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:999px;padding:7px 14px;width:100%;transition:all .2s;}
-.srch:focus-within{background:rgba(0,200,150,0.08);border-color:var(--safe);}
-.srch input{border:none;background:transparent;font-family:'Space Grotesk',sans-serif;font-size:.8rem;color:var(--text);outline:none;flex:1;}
-.srch input::placeholder{color:var(--muted);}
-.srch span{font-size:15px;color:var(--muted);}
-.srch-btn{font-size:15px;color:var(--safe);cursor:pointer;background:none;border:none;display:flex;align-items:center;}
-.suggest-box{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--sf);border:1px solid var(--border);border-radius:12px;z-index:9999;overflow:hidden;box-shadow:var(--shl);display:none;max-height:200px;overflow-y:auto;}
-.suggest-box.show{display:block;}
-.sug-item{padding:9px 14px;font-size:.76rem;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;transition:background .12s;color:var(--text);}
-.sug-item:last-child{border-bottom:none;}
-.sug-item:hover{background:rgba(0,200,150,0.08);}
-.sug-item span{font-size:13px;color:var(--muted);}
-.acts{display:flex;gap:4px;}
-.ib{width:32px;height:32px;border:none;background:transparent;cursor:pointer;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s;}
-.ib:hover{background:rgba(255,255,255,0.07);color:var(--text);}
-.ib span{font-size:17px;}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  background: var(--surface);
+  color: var(--on-surface);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+.filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
 
-/* LAYOUT */
-.main{display:flex;flex:1;overflow:hidden;}
+/* ─── LAYOUT ─── */
+.app { display: flex; flex-direction: column; height: 100%; height: 100dvh; position: relative; }
 
-/* SIDEBAR */
-.sb{width:290px;flex-shrink:0;background:var(--sf);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-.tabs{display:flex;border-bottom:1px solid var(--border);}
-.tbt{flex:1;padding:9px 3px 7px;border:none;background:transparent;font-family:'Space Grotesk',sans-serif;font-size:.48rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .15s;position:relative;}
-.tbt span.material-symbols-outlined{font-size:17px;}
-.tbt.on{color:var(--safe);}
-.tbt.on::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--safe);border-radius:2px;}
-.pnls{flex:1;overflow-y:auto;padding:11px 10px;display:flex;flex-direction:column;gap:9px;}
-.pnls::-webkit-scrollbar{width:3px;}
-.pnls::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
-.pnl{display:none;flex-direction:column;gap:9px;}
-.pnl.on{display:flex;}
-.sl{font-size:.5rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+/* ─── MAP ─── */
+#map { position: absolute; inset: 0; z-index: 0; }
+.map-overlay { position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(circle at 30% 20%, rgba(0,106,43,0.12) 0%, transparent 45%),
+              radial-gradient(circle at 70% 55%, rgba(180,26,20,0.09) 0%, transparent 40%),
+              radial-gradient(circle at 45% 80%, rgba(255,202,83,0.1) 0%, transparent 40%); }
 
-/* Route input */
-.route-input-box{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:7px;}
-.ri-row{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 9px;position:relative;}
-.ri-row.focus-in{border-color:var(--safe);}
-.ri-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.ri-dot.start{background:var(--safe);}
-.ri-dot.end{background:var(--haz);}
-.ri-input{border:none;background:transparent;font-family:'Space Grotesk',sans-serif;font-size:.74rem;color:var(--text);outline:none;flex:1;width:100%;}
-.ri-input::placeholder{color:var(--muted);}
-.ri-sug{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--sf);border:1px solid var(--border);border-radius:10px;z-index:9999;overflow:hidden;box-shadow:var(--shl);display:none;max-height:150px;overflow-y:auto;}
-.ri-sug.show{display:block;}
-.go-btn{width:100%;padding:9px;border:none;border-radius:var(--r-sm);background:linear-gradient(135deg,var(--safe),#0EA5E9);color:#fff;font-family:'Space Grotesk',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:opacity .15s,transform .15s;}
-.go-btn:hover{opacity:0.9;}
-.go-btn:active{transform:scale(0.98);}
-.go-btn span{font-size:14px;}
+/* ─── TOP BAR ─── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  padding-top: calc(12px + env(safe-area-inset-top));
+  background: rgba(237,248,255,0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 1px 0 rgba(20,50,62,0.06), 0 4px 20px rgba(20,50,62,0.04);
+}
+.tb-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--primary); letter-spacing: -0.04em; flex-shrink: 0; }
+.tb-logo span { color: var(--secondary); }
+.tb-search {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  background: var(--surface-low); border-radius: var(--r-full);
+  padding: 9px 14px; transition: all .2s;
+}
+.tb-search:focus-within { background: var(--surface-container); box-shadow: 0 0 0 2px var(--primary); }
+.tb-search input { border: none; background: transparent; font-family: 'Be Vietnam Pro', sans-serif; font-size: .82rem; font-weight: 500; color: var(--on-surface); outline: none; flex: 1; min-width: 0; }
+.tb-search input::placeholder { color: var(--outline); }
+.tb-search .material-symbols-outlined { font-size: 18px; color: var(--outline); flex-shrink: 0; }
+.tb-btn { width: 36px; height: 36px; border: none; background: transparent; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--primary); transition: background .15s, transform .1s; flex-shrink: 0; }
+.tb-btn:active { background: var(--surface-low); transform: scale(0.92); }
+.tb-btn .material-symbols-outlined { font-size: 20px; }
+.suggest-box { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface-lowest); border-radius: var(--r-lg); box-shadow: 0 8px 32px rgba(20,50,62,0.12); display: none; z-index: 300; overflow: hidden; max-height: 200px; overflow-y: auto; }
+.suggest-box.show { display: block; }
+.sug-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; font-size: .8rem; font-weight: 500; cursor: pointer; border-bottom: 1px solid var(--surface-low); color: var(--on-surface); transition: background .12s; }
+.sug-item:last-child { border-bottom: none; }
+.sug-item:hover, .sug-item:active { background: var(--surface-low); }
+.sug-item .material-symbols-outlined { font-size: 16px; color: var(--outline); }
 
-/* Health profile */
-.hp{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius);padding:10px;}
-.hp h3{font-size:.72rem;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
-.hp h3 span{font-size:15px;color:var(--mod);}
-.hp-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
-.hp-btn{padding:7px 6px;border-radius:8px;border:1px solid var(--border);background:transparent;font-family:'Space Grotesk',sans-serif;font-size:.6rem;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);transition:all .15s;text-align:center;}
-.hp-btn span{font-size:18px;}
-.hp-btn.on{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.5);color:var(--haz);}
-.hp-btn.on-m{background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.5);color:var(--mod);}
-.hp-btn.on-g{background:rgba(0,200,150,0.15);border-color:rgba(0,200,150,0.5);color:var(--safe);}
-.health-info{font-size:.6rem;color:var(--muted);padding:5px 7px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;display:none;}
-.health-info.show{display:block;}
+/* ─── ECO SCORE FLOATING ─── */
+.eco-float {
+  position: fixed; top: 0; right: 16px; z-index: 190;
+  top: calc(68px + env(safe-area-inset-top));
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.eco-ring-card {
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--r-lg); padding: 12px 10px;
+  box-shadow: 0 8px 32px rgba(20,50,62,0.1);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border: 1px solid rgba(255,255,255,0.6);
+}
+.eco-ring-card svg { width: 56px; height: 56px; transform: rotate(-90deg); }
+.eco-ring-val { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-family: 'Plus Jakarta Sans',sans-serif; font-size: 1.05rem; font-weight: 800; color: var(--on-surface); }
+.eco-ring-sub { font-size: .48rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--primary); }
+.eco-ring-wrap { position: relative; }
+.eco-label { font-size: .6rem; font-weight: 700; color: var(--outline); text-align: center; font-family: 'Plus Jakarta Sans', sans-serif; }
 
-/* Score card */
-.sc{background:linear-gradient(135deg,rgba(0,200,150,0.12),rgba(14,165,233,0.08));border:1px solid rgba(0,200,150,0.2);border-radius:var(--radius);padding:12px;display:flex;align-items:center;gap:12px;}
-.rw{position:relative;width:60px;height:60px;flex-shrink:0;}
-.rw svg{transform:rotate(-90deg);}
-.rn{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.rn .rv{font-size:1.2rem;font-weight:700;line-height:1;color:var(--safe);}
-.rn .rl{font-size:.42rem;font-weight:700;color:var(--muted);letter-spacing:.07em;}
-.si h2{font-size:.78rem;font-weight:700;color:var(--text);}
-.si p{font-size:.64rem;color:var(--muted);margin-top:2px;}
-.chips{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;}
-.ch{background:rgba(0,200,150,0.1);border:1px solid rgba(0,200,150,0.2);border-radius:999px;padding:2px 7px;font-size:.52rem;font-weight:700;color:var(--safe);}
+/* Layer toggle buttons */
+.layer-btns { display: flex; flex-direction: column; gap: 6px; }
+.layer-btn {
+  width: 40px; height: 40px;
+  background: rgba(255,255,255,0.88); backdrop-filter: blur(20px);
+  border: none; border-radius: 12px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--outline); box-shadow: 0 4px 16px rgba(20,50,62,0.1);
+  transition: all .15s; font-size: 18px;
+}
+.layer-btn.on { background: var(--primary); color: #fff; }
+.layer-btn:active { transform: scale(0.92); }
 
-/* Mode buttons */
-.mg{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;}
-.mb{padding:7px 3px;border-radius:9px;border:1px solid var(--border);background:transparent;font-family:'Space Grotesk',sans-serif;font-size:.52rem;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);transition:all .15s;}
-.mb span{font-size:15px;}
-.mb.on{background:var(--safe);color:#0A2540;border-color:var(--safe);}
+/* ─── BOTTOM SHEET ─── */
+.sheet-backdrop { position: fixed; inset: 0; z-index: 150; background: rgba(20,50,62,0); pointer-events: none; transition: background .3s; }
+.sheet-backdrop.show { background: rgba(20,50,62,0.2); pointer-events: all; }
 
-/* Metrics */
-.mxg{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-.mx{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:11px;padding:9px;backdrop-filter:blur(8px);}
-.mxt{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
-.mxi{font-size:14px;}
-.bx{font-size:.47rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 5px;border-radius:999px;}
-.sb-g{background:rgba(0,200,150,.15);color:var(--safe);}
-.sb-m{background:rgba(245,158,11,.15);color:var(--mod);}
-.sb-h{background:rgba(239,68,68,.15);color:var(--haz);}
-.mv{font-size:1.1rem;font-weight:700;color:var(--safe);letter-spacing:-.04em;font-family:'JetBrains Mono',monospace;}
-.mu2{font-size:.52rem;font-weight:600;color:var(--muted);}
-.mb2{height:3px;background:rgba(255,255,255,0.07);border-radius:3px;margin-top:5px;overflow:hidden;}
-.mbf{height:100%;border-radius:3px;transition:width 1.2s ease;}
+.bottom-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 160;
+  background: var(--surface-lowest);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  box-shadow: 0 -8px 40px rgba(20,50,62,0.12);
+  transition: transform .35s cubic-bezier(0.32,0.72,0,1);
+  max-height: 90dvh; display: flex; flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.sheet-peek { transform: translateY(calc(100% - 260px)); }
+.sheet-half  { transform: translateY(calc(100% - 55dvh)); }
+.sheet-full  { transform: translateY(0); }
 
-/* Route cards */
-.rc{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:11px;padding:10px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden;}
-.rc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
-.rc.eco::before{background:var(--safe);}
-.rc.fast::before{background:#3B82F6;}
-.rc.low-pollution::before{background:#A78BFA;}
-.rc.low-noise::before{background:#EC4899;}
-.rc.on{border-color:rgba(0,200,150,0.3);background:rgba(0,200,150,0.06);}
-.rc:hover{border-color:rgba(255,255,255,0.15);transform:translateX(2px);}
-.rr{display:flex;align-items:center;gap:8px;}
-.ri{width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ri span{font-size:13px;color:var(--safe);}
-.rinf{flex:1;}
-.rnm{font-size:.75rem;font-weight:700;color:var(--text);}
-.rmt{font-size:.58rem;color:var(--muted);margin-top:1px;font-family:'JetBrains Mono',monospace;}
-.rsc{text-align:right;}
-.rpts{font-size:.85rem;font-weight:700;color:var(--safe);}
-.rpl{font-size:.42rem;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
-.rtgs{display:flex;gap:3px;margin-top:5px;flex-wrap:wrap;}
-.tg{font-size:.48rem;font-weight:700;letter-spacing:.04em;padding:2px 6px;border-radius:999px;text-transform:uppercase;}
-.tg-g{background:rgba(0,200,150,.12);color:var(--safe);}
-.tg-b{background:rgba(59,130,246,.12);color:#3B82F6;}
-.tg-r{background:rgba(239,68,68,.12);color:var(--haz);}
-.tg-p{background:rgba(167,139,250,.12);color:#A78BFA;}
-.tg-pk{background:rgba(236,72,153,.12);color:#EC4899;}
-.no-route{font-size:.72rem;color:var(--muted);text-align:center;padding:16px;background:rgba(255,255,255,0.03);border-radius:11px;border:1px dashed var(--border);}
+.sheet-handle { width: 36px; height: 4px; background: var(--outline-var); border-radius: 99px; margin: 12px auto 0; flex-shrink: 0; cursor: grab; }
+.sheet-scroll { overflow-y: auto; flex: 1; padding: 0 16px 16px; -webkit-overflow-scrolling: touch; }
+.sheet-scroll::-webkit-scrollbar { display: none; }
 
-/* Toggle */
-.tr{background:rgba(255,255,255,0.04);border-radius:9px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);}
-.ti h4{font-size:.7rem;font-weight:700;color:var(--text);}
-.ti p{font-size:.57rem;color:var(--muted);}
-.sw{position:relative;width:34px;height:19px;cursor:pointer;}
-.sw input{opacity:0;width:0;height:0;position:absolute;}
-.sw-t{position:absolute;inset:0;background:rgba(255,255,255,0.1);border-radius:999px;transition:background .22s;}
-.sw-k{position:absolute;top:2px;left:2px;width:15px;height:15px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:transform .22s;}
-.sw input:checked~.sw-t{background:var(--safe);}
-.sw input:checked~.sw-k{transform:translateX(15px);}
+/* ─── ROUTE INPUTS ─── */
+.route-inputs { padding: 12px 0 8px; display: flex; flex-direction: column; gap: 8px; }
+.inp-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface-low); border-radius: var(--r-full);
+  padding: 11px 16px; position: relative; transition: all .2s;
+}
+.inp-row.focus-in { background: var(--surface-container); box-shadow: 0 0 0 2px var(--primary); }
+.inp-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.inp-dot.start { background: var(--primary); }
+.inp-dot.end { background: var(--error); }
+.inp-field { border: none; background: transparent; font-family: 'Be Vietnam Pro', sans-serif; font-size: .84rem; font-weight: 500; color: var(--on-surface); outline: none; flex: 1; min-width: 0; }
+.inp-field::placeholder { color: var(--outline); }
+.inp-connector { width: 10px; display: flex; justify-content: center; flex-shrink: 0; }
+.inp-connector-line { width: 2px; height: 14px; background: var(--outline-var); border-radius: 2px; margin: auto; }
+.inp-suggest { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface-lowest); border-radius: var(--r-lg); box-shadow: 0 8px 32px rgba(20,50,62,0.12); display: none; z-index: 300; max-height: 160px; overflow-y: auto; }
+.inp-suggest.show { display: block; }
 
-/* Custom Locations Panel */
-.loc-panel{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius);padding:10px;}
-.loc-panel h3{font-size:.7rem;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
-.loc-panel h3 span{font-size:15px;color:#A78BFA;}
-.loc-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto;margin-bottom:8px;}
-.loc-list::-webkit-scrollbar{width:3px;}
-.loc-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
-.loc-item{display:flex;align-items:center;gap:7px;padding:7px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;}
-.loc-item:hover{border-color:rgba(167,139,250,0.4);background:rgba(167,139,250,0.06);}
-.loc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.loc-info{flex:1;}
-.loc-name{font-size:.7rem;font-weight:600;color:var(--text);}
-.loc-addr{font-size:.57rem;color:var(--muted);}
-.loc-actions{display:flex;gap:3px;}
-.loc-btn{width:22px;height:22px;border:none;background:transparent;cursor:pointer;border-radius:5px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;transition:all .12s;}
-.loc-btn:hover{background:rgba(255,255,255,0.08);color:var(--text);}
-.loc-btn.use-btn:hover{color:var(--safe);}
-.loc-btn.del-btn:hover{color:var(--haz);}
-.add-loc-form{display:flex;flex-direction:column;gap:6px;}
-.add-loc-form input{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:7px;padding:7px 9px;font-family:'Space Grotesk',sans-serif;font-size:.72rem;color:var(--text);outline:none;transition:border-color .2s;}
-.add-loc-form input:focus{border-color:var(--safe);}
-.add-loc-form input::placeholder{color:var(--muted);}
-.loc-form-row{display:flex;gap:5px;}
-.add-loc-btn{flex:1;padding:7px;border:none;border-radius:7px;background:rgba(167,139,250,0.2);border:1px solid rgba(167,139,250,0.4);color:#A78BFA;font-family:'Space Grotesk',sans-serif;font-size:.68rem;font-weight:700;cursor:pointer;transition:all .15s;}
-.add-loc-btn:hover{background:rgba(167,139,250,0.3);}
-.pin-loc-btn{padding:7px 8px;border:none;border-radius:7px;background:rgba(0,200,150,0.1);border:1px solid rgba(0,200,150,0.3);color:var(--safe);font-family:'Space Grotesk',sans-serif;font-size:.65rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;}
-.pin-loc-btn span{font-size:13px;}
-.pin-loc-btn.active{background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.5);color:var(--mod);}
+/* CTA Button */
+.find-btn {
+  width: 100%; padding: 14px; border: none; border-radius: var(--r-full);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dim) 100%);
+  color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: .88rem; font-weight: 700; cursor: pointer; letter-spacing: -.01em;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 6px 20px rgba(0,106,43,0.3); transition: all .15s; margin-top: 4px;
+}
+.find-btn:active { transform: scale(0.98); opacity: .9; }
+.find-btn .material-symbols-outlined { font-size: 18px; }
 
-/* Category pills */
-.cat-pills{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px;}
-.cat-pill{padding:3px 8px;border-radius:999px;border:1px solid var(--border);background:transparent;font-family:'Space Grotesk',sans-serif;font-size:.52rem;font-weight:600;cursor:pointer;color:var(--muted);transition:all .12s;}
-.cat-pill.on{border-color:rgba(167,139,250,0.5);background:rgba(167,139,250,0.1);color:#A78BFA;}
+/* ─── SECTION LABEL ─── */
+.sec-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--outline); margin-top: 16px; margin-bottom: 8px; padding: 0 2px; }
 
-/* Alert items */
-.ai{background:rgba(255,255,255,0.04);border-radius:9px;padding:8px 10px;display:flex;gap:8px;align-items:flex-start;border:1px solid var(--border);}
-.ad{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0;}
-.ad.r{background:var(--haz);box-shadow:0 0 6px rgba(239,68,68,.5);}
-.ad.a{background:var(--mod);box-shadow:0 0 6px rgba(245,158,11,.4);}
-.ad.g{background:var(--safe);box-shadow:0 0 6px rgba(0,200,150,.35);}
-.at h4{font-size:.7rem;font-weight:700;color:var(--text);}
-.at p{font-size:.58rem;color:var(--muted);margin-top:1px;}
-.atm{font-size:.52rem;color:var(--muted);margin-top:2px;font-family:'JetBrains Mono',monospace;}
+/* ─── TRAVEL MODE ─── */
+.mode-row { display: flex; gap: 8px; }
+.mode-btn {
+  flex: 1; padding: 10px 4px; border: none; border-radius: 12px;
+  background: var(--surface-low); font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: .58rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  color: var(--on-surface-var); transition: all .2s;
+}
+.mode-btn .material-symbols-outlined { font-size: 22px; }
+.mode-btn.on { background: var(--primary-container); color: var(--on-primary-cont); }
+.mode-btn:active { transform: scale(0.95); }
 
-/* Impact */
-.ig{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
-.is{background:rgba(255,255,255,0.04);border-radius:9px;padding:8px 5px;text-align:center;border:1px solid var(--border);}
-.is .iv{font-size:1.1rem;font-weight:700;letter-spacing:-.03em;font-family:'JetBrains Mono',monospace;color:var(--safe);}
-.is .iu{font-size:.5rem;font-weight:700;color:var(--muted);}
-.is .il{font-size:.55rem;color:var(--muted);margin-top:1px;}
+/* ─── TOGGLES ─── */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface-low); border-radius: 14px;
+  padding: 12px 14px; margin-bottom: 8px;
+}
+.toggle-info h4 { font-size: .84rem; font-weight: 700; color: var(--on-surface); }
+.toggle-info p { font-size: .68rem; color: var(--on-surface-var); margin-top: 1px; }
+.sw { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+.sw input { opacity: 0; width: 0; height: 0; position: absolute; }
+.sw-track { position: absolute; inset: 0; background: var(--outline-var); border-radius: 999px; transition: background .22s; }
+.sw-knob { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,.15); transition: transform .22s; }
+.sw input:checked ~ .sw-track { background: var(--primary); }
+.sw input:checked ~ .sw-knob { transform: translateX(20px); }
 
-/* CTA */
-.ct{width:100%;padding:10px;border:none;border-radius:999px;background:linear-gradient(135deg,var(--safe),#0EA5E9);color:#fff;font-family:'Space Grotesk',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s,transform .15s;box-shadow:0 4px 16px rgba(0,200,150,0.3);}
-.ct:hover{opacity:.9;}
-.ct:active{transform:scale(.98);}
-.ct span{font-size:15px;}
+/* ─── ECO SCORE CARD ─── */
+.score-card {
+  display: flex; align-items: center; gap: 14px;
+  background: linear-gradient(135deg, rgba(134,248,152,0.2) 0%, rgba(203,237,255,0.6) 100%);
+  border-radius: var(--r-lg); padding: 16px; margin-bottom: 4px;
+}
+.score-ring { position: relative; flex-shrink: 0; width: 72px; height: 72px; }
+.score-ring svg { width: 72px; height: 72px; transform: rotate(-90deg); }
+.score-ring-inner { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.score-num { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.5rem; font-weight: 900; line-height: 1; color: var(--on-surface); }
+.score-lbl { font-size: .44rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); margin-top: 1px; }
+.score-info { flex: 1; }
+.score-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: .9rem; font-weight: 800; color: var(--on-surface); }
+.score-sub { font-size: .68rem; color: var(--on-surface-var); margin-top: 3px; }
+.score-chips { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+.chip { font-size: .56rem; font-weight: 700; padding: 3px 9px; border-radius: var(--r-full); background: var(--primary-container); color: var(--on-primary-cont); }
+.chip.orange { background: var(--secondary-cont); color: var(--on-secondary-cont); }
+.chip.red { background: var(--tertiary-cont); color: var(--on-tertiary-cont); }
 
-.ld{display:flex;align-items:center;gap:7px;font-size:.7rem;color:var(--muted);padding:6px 0;}
-.sp{width:11px;height:11px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--safe);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* ─── ROUTE CARDS ─── */
+.route-card {
+  background: var(--surface-low); border-radius: var(--r-lg);
+  padding: 14px; margin-bottom: 10px; cursor: pointer;
+  transition: all .2s; position: relative; overflow: hidden;
+}
+.route-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 4px 0 0 4px; }
+.route-card.eco::before { background: var(--primary); }
+.route-card.fast::before { background: #2563eb; }
+.route-card.quiet::before { background: var(--secondary); }
+.route-card.lpoll::before { background: #7c3aed; }
+.route-card.on { background: var(--surface-container); box-shadow: 0 4px 20px rgba(20,50,62,0.08); transform: scale(1.01); }
+.route-card.best { border: 2px solid var(--primary); background: var(--surface-lowest); box-shadow: 0 8px 32px rgba(0,106,43,0.12); }
+.rc-badge { position: absolute; top: -1px; left: 20px; background: var(--primary); color: #fff; font-size: .52rem; font-weight: 800; padding: 2px 8px; border-radius: 0 0 6px 6px; letter-spacing: .06em; text-transform: uppercase; display: flex; align-items: center; gap: 3px; }
+.rc-badge .material-symbols-outlined { font-size: 11px; }
+.rc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-top: 4px; }
+.rc-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--surface-highest); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rc-icon .material-symbols-outlined { font-size: 18px; color: var(--on-surface); }
+.rc-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: .9rem; font-weight: 800; color: var(--on-surface); }
+.rc-meta { font-size: .7rem; color: var(--on-surface-var); margin-top: 2px; font-family: 'Be Vietnam Pro', monospace; }
+.rc-score { text-align: right; }
+.rc-score-num { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.2rem; font-weight: 900; }
+.rc-score-lbl { font-size: .44rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--outline); }
+.rc-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+.rc-tag { font-size: .52rem; font-weight: 700; padding: 3px 8px; border-radius: var(--r-full); text-transform: uppercase; letter-spacing: .04em; }
+.tag-g { background: rgba(134,248,152,0.3); color: var(--on-primary-cont); }
+.tag-b { background: rgba(37,99,235,0.12); color: #1d4ed8; }
+.tag-y { background: rgba(255,202,83,0.4); color: var(--on-secondary-cont); }
+.tag-r { background: rgba(255,147,132,0.3); color: var(--on-tertiary-cont); }
+.tag-p { background: rgba(124,58,237,0.1); color: #5b21b6; }
+.rc-bar { height: 4px; background: var(--surface-highest); border-radius: 99px; overflow: hidden; margin-top: 10px; }
+.rc-bar-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
+.rc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+.rc-stat { background: var(--surface-lowest); border-radius: 10px; padding: 8px 6px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.rc-stat .material-symbols-outlined { font-size: 16px; }
+.rc-stat-lbl { font-size: .48rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--on-surface-var); text-align: center; }
 
-/* MAP */
-.mw{flex:1;position:relative;}
-#map{width:100%;height:100%;}
+/* ─── HEALTH PANEL ─── */
+.health-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.health-btn {
+  padding: 12px 8px; border: none; border-radius: 14px;
+  background: var(--surface-low); font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: .68rem; font-weight: 600; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  color: var(--on-surface-var); transition: all .18s; text-align: center;
+}
+.health-btn .material-symbols-outlined { font-size: 22px; }
+.health-btn.on { background: rgba(180,26,20,0.1); color: var(--tertiary); }
+.health-btn.on-m { background: rgba(255,202,83,0.3); color: var(--secondary); }
+.health-btn.on-g { background: rgba(134,248,152,0.3); color: var(--primary); }
+.health-info-box { background: rgba(255,202,83,0.15); border-radius: 12px; padding: 10px 12px; font-size: .7rem; color: var(--on-surface-var); margin-top: 4px; line-height: 1.5; }
+.cond-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-/* Map overlays */
-.otl{position:absolute;top:11px;left:11px;z-index:500;display:flex;flex-direction:column;gap:7px;}
-.otr{position:absolute;top:11px;right:11px;z-index:500;display:flex;flex-direction:column;gap:7px;}
-.obl{position:absolute;bottom:14px;left:11px;z-index:500;}
-.gc{background:rgba(13,25,40,0.92);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:11px;box-shadow:var(--sh);}
+/* ─── BOTTOM NAV ─── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 170;
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 8px 20px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 -8px 32px rgba(20,50,62,0.07);
+  border-radius: 24px 24px 0 0;
+}
+.bnav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; transition: all .15s; min-width: 52px; }
+.bnav-item .material-symbols-outlined { font-size: 22px; color: var(--outline); transition: color .15s; }
+.bnav-item span.bnav-lbl { font-size: .54rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--outline); }
+.bnav-item.on .material-symbols-outlined { color: var(--primary); }
+.bnav-item.on .bnav-lbl { color: var(--primary); }
+.bnav-fab {
+  width: 52px; height: 52px; background: var(--primary);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,106,43,0.35); color: #fff; cursor: pointer;
+  transform: translateY(-8px); transition: all .15s; flex-shrink: 0;
+}
+.bnav-fab .material-symbols-outlined { font-size: 22px; }
+.bnav-fab:active { transform: translateY(-8px) scale(0.92); }
 
-.aqi-badge{background:rgba(13,25,40,0.92);border:1px solid var(--border);border-radius:9px;padding:8px 12px;display:flex;flex-direction:column;gap:2px;}
-.aqi-badge .ab-val{font-size:1.4rem;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;}
-.aqi-badge .ab-lbl{font-size:.52rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);}
-.aqi-badge .ab-loc{font-size:.6rem;color:var(--muted);max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* ─── TOAST ─── */
+.tw { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 500; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; width: calc(100% - 32px); max-width: 400px; }
+.tst { background: var(--on-surface); color: #edf8ff; border-radius: 999px; padding: 10px 18px; font-size: .78rem; font-weight: 600; display: flex; align-items: center; gap: 7px; box-shadow: 0 8px 32px rgba(20,50,62,0.2); animation: tin .3s cubic-bezier(.34,1.56,.64,1); pointer-events: all; white-space: nowrap; }
+.tst.success { background: var(--primary); }
+.tst.warning { background: var(--secondary); color: #fff1db; }
+.tst.danger { background: var(--error); color: #fff; }
+.tst .material-symbols-outlined { font-size: 16px; }
+@keyframes tin { from { opacity:0; transform: translateY(-12px) scale(0.9); } to { opacity:1; transform: translateY(0) scale(1); } }
+.tst.out { animation: tout .25s ease forwards; }
+@keyframes tout { to { opacity:0; transform: translateY(-8px) scale(0.9); } }
 
-.nw{display:flex;align-items:center;gap:8px;padding:8px 11px;}
-.nbs{display:flex;align-items:flex-end;gap:2px;height:15px;}
-.nb{width:3px;background:var(--noise-safe);border-radius:2px;animation:np .5s ease-in-out infinite;}
-.nb:nth-child(1){height:5px}.nb:nth-child(2){height:11px;animation-delay:.1s}.nb:nth-child(3){height:7px;animation-delay:.05s}.nb:nth-child(4){height:13px;animation-delay:.15s}.nb:nth-child(5){height:4px;animation-delay:.08s}
-@keyframes np{0%,100%{opacity:1;transform:scaleY(1)}50%{opacity:.4;transform:scaleY(.4)}}
-.nv{font-size:.9rem;font-weight:700;font-family:'JetBrains Mono',monospace;}
-.nl{font-size:.52rem;color:var(--muted);font-weight:600;}
+/* ─── FLOATING ALERT ─── */
+.env-float {
+  position: fixed; bottom: calc(72px + env(safe-area-inset-bottom) + 16px);
+  left: 16px; right: 16px; z-index: 155;
+  background: rgba(255,255,255,0.9); backdrop-filter: blur(20px);
+  border-radius: var(--r-lg); padding: 12px 14px;
+  box-shadow: 0 8px 32px rgba(20,50,62,0.12);
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid rgba(255,255,255,0.7);
+  transition: all .3s;
+}
+.env-float-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.env-float-icon.ok { background: rgba(134,248,152,0.3); color: var(--primary); }
+.env-float-icon.warn { background: rgba(255,202,83,0.3); color: var(--secondary); }
+.env-float-icon.bad { background: rgba(255,147,132,0.3); color: var(--tertiary); }
+.env-float-txt { flex: 1; }
+.env-float-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: .82rem; font-weight: 800; color: var(--on-surface); }
+.env-float-sub { font-size: .66rem; color: var(--on-surface-var); margin-top: 1px; }
+.env-float-btn { border: none; background: var(--primary-container); color: var(--on-primary-cont); border-radius: var(--r-full); padding: 5px 12px; font-family: 'Be Vietnam Pro', sans-serif; font-size: .62rem; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+.env-float-close { border: none; background: transparent; cursor: pointer; color: var(--outline); padding: 4px; border-radius: 50%; }
 
-.lc{display:flex;flex-direction:column;gap:2px;padding:4px;}
-.lb{width:36px;height:36px;border:none;background:transparent;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s;position:relative;}
-.lb span{font-size:17px;}
-.lb:hover{background:rgba(255,255,255,0.07);color:var(--text);}
-.lb.on{background:var(--safe)!important;color:#0A2540!important;}
-.lbt{position:absolute;right:calc(100%+7px);top:50%;transform:translateY(-50%);background:rgba(10,37,64,.95);border:1px solid var(--border);color:var(--text);font-size:.56rem;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;}
-.lb:hover .lbt{opacity:1;}
+/* ─── PLACES PANEL ─── */
+.loc-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface-low); border-radius: 14px; margin-bottom: 8px; cursor: pointer; transition: all .15s; }
+.loc-item:active { background: var(--surface-container); }
+.loc-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.loc-name { font-size: .82rem; font-weight: 700; color: var(--on-surface); }
+.loc-addr { font-size: .65rem; color: var(--on-surface-var); margin-top: 1px; }
+.loc-actions { display: flex; gap: 4px; margin-left: auto; }
+.loc-act { width: 28px; height: 28px; border: none; background: var(--surface-container); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--on-surface-var); font-size: 14px; transition: all .12s; }
+.loc-act:active { background: var(--surface-highest); }
+.loc-act.del:active { color: var(--error); }
+.add-form { background: var(--surface-low); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.add-inp { background: var(--surface-lowest); border: none; border-radius: 10px; padding: 10px 12px; font-family: 'Be Vietnam Pro', sans-serif; font-size: .8rem; font-weight: 500; color: var(--on-surface); outline: none; width: 100%; }
+.add-inp::placeholder { color: var(--outline); }
+.add-inp:focus { box-shadow: 0 0 0 2px var(--primary); }
+.add-sel { background: var(--surface-lowest); border: none; border-radius: 10px; padding: 10px 12px; font-family: 'Be Vietnam Pro', sans-serif; font-size: .8rem; font-weight: 500; color: var(--on-surface); outline: none; width: 100%; cursor: pointer; }
+.add-row { display: flex; gap: 8px; }
+.add-btn { flex: 1; padding: 11px; border: none; border-radius: 10px; background: var(--primary-container); color: var(--on-primary-cont); font-family: 'Plus Jakarta Sans', sans-serif; font-size: .78rem; font-weight: 700; cursor: pointer; transition: all .15s; }
+.pin-btn { padding: 11px 12px; border: none; border-radius: 10px; background: var(--surface-container); color: var(--on-surface); font-family: 'Be Vietnam Pro', sans-serif; font-size: .75rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.pin-btn.active { background: rgba(255,202,83,0.3); color: var(--secondary); }
+.pin-btn .material-symbols-outlined { font-size: 16px; }
+.cat-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.cat-chip { padding: 5px 12px; border: none; border-radius: var(--r-full); background: var(--surface-low); font-family: 'Be Vietnam Pro', sans-serif; font-size: .64rem; font-weight: 600; color: var(--on-surface-var); cursor: pointer; transition: all .12s; }
+.cat-chip.on { background: var(--primary-container); color: var(--on-primary-cont); }
 
-/* Floating pollution alert */
-.pa{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:500;background:rgba(13,25,40,0.96);backdrop-filter:blur(22px);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shl);padding:11px 15px;display:flex;gap:10px;align-items:center;min-width:270px;max-width:380px;animation:su .4s cubic-bezier(.34,1.56,.64,1);transition:opacity .3s;}
-@keyframes su{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
-.pi{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.pi.r{background:rgba(239,68,68,.15);color:var(--haz);}
-.pi.a{background:rgba(245,158,11,.15);color:var(--mod);}
-.pi.g{background:rgba(0,200,150,.15);color:var(--safe);}
-.pi span{font-size:18px;}
-.pt h3{font-size:.78rem;font-weight:700;color:var(--text);}
-.pt p{font-size:.62rem;color:var(--muted);margin-top:2px;}
-.ab{display:inline-flex;align-items:center;gap:3px;margin-top:5px;background:var(--safe);color:#0A2540;border:none;border-radius:999px;padding:4px 10px;font-family:'Space Grotesk',sans-serif;font-size:.58rem;font-weight:700;cursor:pointer;}
-.pc{position:absolute;top:6px;right:6px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:50%;width:19px;height:19px;display:flex;align-items:center;justify-content:center;font-size:11px;}
+/* ─── NAV START BUTTON ─── */
+.nav-start {
+  width: 100%; padding: 14px; border: none; border-radius: var(--r-full);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dim));
+  color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; font-size: .9rem; font-weight: 800;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 6px 24px rgba(0,106,43,0.3); margin-top: 8px; transition: all .15s;
+}
+.nav-start:active { transform: scale(0.98); }
+.nav-start.active { background: linear-gradient(135deg, var(--error), #9a0000); box-shadow: 0 6px 24px rgba(176,37,0,0.3); }
 
-/* Legend */
-.leg{font-size:.64rem;padding:8px 11px;}
-.leg-t{font-size:.52rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-.leg-i{display:flex;align-items:center;gap:5px;font-weight:600;margin-bottom:3px;font-size:.62rem;color:var(--text);}
-.ld2{width:9px;height:9px;border-radius:3px;}
+/* ─── AQI BADGE ON MAP ─── */
+.aqi-badge-map {
+  position: fixed; left: 16px; z-index: 190;
+  top: calc(68px + env(safe-area-inset-top));
+  background: rgba(255,255,255,0.88); backdrop-filter: blur(20px);
+  border-radius: var(--r-lg); padding: 10px 14px;
+  box-shadow: 0 4px 20px rgba(20,50,62,0.1);
+  border: 1px solid rgba(255,255,255,0.6);
+}
+.aqi-val { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.6rem; font-weight: 900; line-height: 1; }
+.aqi-lbl { font-size: .5rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--outline); margin-top: 2px; }
+.aqi-loc { font-size: .6rem; color: var(--on-surface-var); margin-top: 1px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* Toast */
-.tw{position:fixed;top:62px;right:12px;z-index:3000;display:flex;flex-direction:column;gap:5px;pointer-events:none;}
-.tst{background:var(--pr);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:7px 12px;font-size:.7rem;font-weight:600;display:flex;align-items:center;gap:6px;box-shadow:var(--shl);animation:tin .35s cubic-bezier(.34,1.56,.64,1);pointer-events:all;}
-.tst span{font-size:14px;}
-.tst.success{background:rgba(0,200,150,0.2);border-color:rgba(0,200,150,0.4);color:var(--safe);}
-.tst.warning{background:rgba(245,158,11,0.2);border-color:rgba(245,158,11,0.4);color:var(--mod);}
-.tst.danger{background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.4);color:var(--haz);}
-@keyframes tin{from{opacity:0;transform:translateX(22px)}to{opacity:1;transform:translateX(0)}}
-.tst.out{animation:tout .3s ease forwards;}
-@keyframes tout{from{opacity:1}to{opacity:0;transform:translateX(22px)}}
+/* ─── PIN DROP BAR ─── */
+.pin-bar {
+  position: fixed; top: calc(70px + env(safe-area-inset-top)); left: 16px; right: 16px; z-index: 300;
+  background: rgba(255,202,83,0.95); backdrop-filter: blur(12px);
+  border-radius: var(--r-lg); padding: 10px 14px;
+  display: none; align-items: center; gap: 10px;
+  box-shadow: 0 4px 20px rgba(118,86,0,0.25);
+}
+.pin-bar.show { display: flex; }
+.pin-bar-cancel { margin-left: auto; border: none; background: rgba(0,0,0,0.1); border-radius: var(--r-full); padding: 5px 12px; font-family: 'Be Vietnam Pro', sans-serif; font-size: .7rem; font-weight: 700; color: var(--secondary); cursor: pointer; }
 
-/* Proximity alert */
-.prox-alert{position:absolute;top:11px;left:50%;transform:translateX(-50%);z-index:900;background:rgba(13,25,40,0.97);border:1.5px solid;border-radius:11px;padding:9px 15px;min-width:240px;max-width:340px;display:none;box-shadow:var(--shl);}
-.prox-alert.show{display:flex;align-items:center;gap:9px;}
-.prox-alert.danger{border-color:rgba(239,68,68,.5);}
-.prox-alert.warning{border-color:rgba(245,158,11,.5);}
-.pa-icon{font-size:20px;}
-.pa-text{flex:1;}
-.pa-text strong{font-size:.75rem;display:block;color:var(--text);}
-.pa-text span{font-size:.62rem;color:var(--muted);}
-.pa-close{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:15px;display:flex;align-items:center;}
+/* ─── LEAFLET OVERRIDES ─── */
+.leaflet-popup-content-wrapper { background: var(--surface-lowest) !important; border-radius: 14px !important; box-shadow: 0 8px 32px rgba(20,50,62,0.15) !important; color: var(--on-surface) !important; font-family: 'Be Vietnam Pro', sans-serif !important; }
+.leaflet-popup-tip { background: var(--surface-lowest) !important; }
+.leaflet-popup-content { color: var(--on-surface) !important; font-size: .8rem !important; }
+.leaflet-popup-close-button { color: var(--outline) !important; }
+.leaflet-control-zoom a { background: rgba(255,255,255,0.9) !important; color: var(--primary) !important; border-color: var(--outline-var) !important; backdrop-filter: blur(10px); }
 
-/* Nav controls */
-.nav-panel{position:absolute;bottom:75px;left:50%;transform:translateX(-50%);z-index:600;display:flex;gap:7px;align-items:center;}
-#navBtn{padding:9px 20px;border:none;border-radius:999px;background:linear-gradient(135deg,var(--safe),#0EA5E9);color:#fff;font-family:'Space Grotesk',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 4px 18px rgba(0,200,150,0.4);transition:all .15s;}
-#navBtn span{font-size:15px;}
-#navBtn.active{background:linear-gradient(135deg,var(--haz),#F97316);}
+/* ─── TABS (inside sheet) ─── */
+.sheet-tabs { display: flex; background: var(--surface-low); border-radius: var(--r-full); padding: 3px; gap: 2px; margin-bottom: 16px; }
+.sheet-tab { flex: 1; padding: 8px 4px; border: none; background: transparent; border-radius: var(--r-full); font-family: 'Be Vietnam Pro', sans-serif; font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--outline); cursor: pointer; transition: all .18s; }
+.sheet-tab.on { background: var(--surface-lowest); color: var(--primary); box-shadow: 0 2px 8px rgba(20,50,62,0.08); }
 
-.skel{background:linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.04) 75%);background-size:200% 100%;animation:sk 1.5s infinite;border-radius:8px;height:70px;}
-@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+/* ─── PANE ─── */
+.pane { display: none; flex-direction: column; }
+.pane.on { display: flex; }
 
-.sdot-row{display:flex;align-items:center;gap:5px;font-size:.62rem;font-weight:600;color:var(--muted);}
-.sdot{width:6px;height:6px;border-radius:50%;}
-.sdot.live{background:var(--safe);box-shadow:0 0 5px rgba(0,200,150,.5);animation:blink 2s ease-in-out infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.route-ld{font-size:.7rem;color:var(--muted);text-align:center;padding:10px;display:flex;align-items:center;justify-content:center;gap:7px;}
+/* ─── STATS PANEL ─── */
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.metric-card { background: var(--surface-low); border-radius: 14px; padding: 12px; }
+.metric-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.metric-icon { font-size: 18px; }
+.metric-badge { font-size: .48rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 2px 6px; border-radius: var(--r-full); }
+.badge-g { background: var(--primary-container); color: var(--on-primary-cont); }
+.badge-m { background: var(--secondary-cont); color: var(--on-secondary-cont); }
+.badge-h { background: var(--tertiary-cont); color: var(--on-tertiary-cont); }
+.metric-val { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.3rem; font-weight: 900; color: var(--on-surface); }
+.metric-unit { font-size: .62rem; font-weight: 600; color: var(--on-surface-var); }
+.metric-bar { height: 3px; background: var(--surface-container); border-radius: 99px; overflow: hidden; margin-top: 8px; }
+.metric-bar-fill { height: 100%; border-radius: 99px; transition: width 1.2s ease; }
 
-/* Pin drop mode */
-.pin-mode-bar{position:absolute;top:70px;left:50%;transform:translateX(-50%);z-index:800;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.5);border-radius:10px;padding:8px 16px;display:none;align-items:center;gap:10px;backdrop-filter:blur(10px);}
-.pin-mode-bar.show{display:flex;}
-.pin-mode-bar span{font-size:13px;color:var(--mod);}
-.pin-mode-bar p{font-size:.72rem;color:var(--mod);font-weight:600;}
-.pin-cancel{border:none;background:transparent;color:var(--mod);cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:.65rem;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid rgba(245,158,11,0.4);}
-
-/* Route comparison bar */
-.route-compare{font-size:.58rem;color:var(--muted);padding:5px 0 3px;display:flex;gap:8px;align-items:center;}
-.rc-seg{display:flex;align-items:center;gap:3px;}
-.rc-dot{width:8px;height:8px;border-radius:50%;}
-
-/* Leaflet dark popup */
-.leaflet-popup-content-wrapper{background:rgba(13,25,40,0.97)!important;border:1px solid rgba(255,255,255,0.1)!important;border-radius:10px!important;box-shadow:var(--shl)!important;color:var(--text)!important;font-family:'Space Grotesk',sans-serif!important;}
-.leaflet-popup-tip{background:rgba(13,25,40,0.97)!important;}
-.leaflet-popup-content{color:var(--text)!important;font-size:.75rem!important;}
-.leaflet-container a.leaflet-popup-close-button{color:var(--muted)!important;}
+/* ─── SPINNER ─── */
+.spin { width: 14px; height: 14px; border: 2px solid var(--outline-var); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-row { display: flex; align-items: center; gap: 8px; padding: 10px; font-size: .74rem; color: var(--outline); justify-content: center; }
+.no-routes { text-align: center; padding: 20px; font-size: .78rem; color: var(--on-surface-var); background: var(--surface-low); border-radius: 14px; }
 </style>
 </head>
 <body>
 
-<!-- TOPBAR -->
-<div class="tb">
-  <div class="logo">
-    <div class="lm"><span class="material-symbols-outlined">eco</span></div>
-    <h1>EcoRoute<small>v2</small></h1>
+<!-- MAP -->
+<div id="map"></div>
+<div class="map-overlay"></div>
+
+<!-- AQI Badge -->
+<div class="aqi-badge-map" id="aqiBadge">
+  <div class="aqi-val" id="aqiVal" style="color:var(--secondary)">—</div>
+  <div class="aqi-lbl">AQI · CSV</div>
+  <div class="aqi-loc" id="aqiLoc">Loading…</div>
+</div>
+
+<!-- Eco Score Float -->
+<div class="eco-float">
+  <div class="eco-ring-card">
+    <div class="eco-ring-wrap">
+      <svg viewBox="0 0 56 56">
+        <circle cx="28" cy="28" r="22" fill="none" stroke="#e0f4ff" stroke-width="7"/>
+        <circle id="ecoRingCircle" cx="28" cy="28" r="22" fill="none" stroke="var(--primary)" stroke-width="7" stroke-linecap="round" stroke-dasharray="138" stroke-dashoffset="55" style="transition:stroke-dashoffset 1s ease,stroke 1s ease"/>
+      </svg>
+      <div class="eco-ring-val" id="ecoRingVal">72</div>
+    </div>
+    <div class="eco-ring-sub" id="ecoRingSub">SCORE</div>
   </div>
-  <div class="srch-wrap">
-    <div class="srch">
+  <div class="layer-btns">
+    <button class="layer-btn on" id="lAqi" onclick="toggleLayer('aqi')" title="AQI"><span class="material-symbols-outlined" style="font-size:18px">air</span></button>
+    <button class="layer-btn" id="lNoise" onclick="toggleLayer('noise')" title="Noise"><span class="material-symbols-outlined" style="font-size:18px">volume_up</span></button>
+    <button class="layer-btn" id="lPins" onclick="togglePinLayer()" title="Places"><span class="material-symbols-outlined" style="font-size:18px">pin_drop</span></button>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar" id="topbar">
+  <div class="tb-logo">Eco<span>Route</span></div>
+  <div style="position:relative;flex:1">
+    <div class="tb-search">
       <span class="material-symbols-outlined">search</span>
-      <input id="mainSearch" placeholder="Search any location…" oninput="onMainSearch(this.value)" onkeydown="if(event.key==='Enter')doMainSearch()"/>
-      <button class="srch-btn" onclick="doMainSearch()"><span class="material-symbols-outlined">arrow_forward</span></button>
+      <input id="mainSearch" placeholder="Where are we breathing today?" oninput="onMainSearch(this.value)" onkeydown="if(event.key==='Enter')doMainSearch()"/>
     </div>
     <div class="suggest-box" id="mainSuggest"></div>
   </div>
-  <div class="acts">
-    <button class="ib" title="My Location" onclick="locateMe()"><span class="material-symbols-outlined">my_location</span></button>
-    <button class="ib" title="Sensor Data" onclick="showPane('env')"><span class="material-symbols-outlined">sensors</span></button>
-  </div>
+  <button class="tb-btn" onclick="locateMe()"><span class="material-symbols-outlined">my_location</span></button>
 </div>
 
-<!-- MAIN -->
-<div class="main">
+<!-- PIN DROP BAR -->
+<div class="pin-bar" id="pinBar">
+  <span class="material-symbols-outlined" style="color:var(--secondary);font-size:18px">add_location_alt</span>
+  <span style="font-size:.78rem;font-weight:700;color:var(--secondary)">Tap map to drop a pin</span>
+  <button class="pin-bar-cancel" onclick="togglePinMode()">Cancel</button>
+</div>
 
-<!-- SIDEBAR -->
-<div class="sb">
-  <div class="tabs">
-    <button class="tbt on" id="tb-route" onclick="showPane('route')"><span class="material-symbols-outlined">alt_route</span>Route</button>
-    <button class="tbt" id="tb-health" onclick="showPane('health')"><span class="material-symbols-outlined">health_and_safety</span>Health</button>
-    <button class="tbt" id="tb-env" onclick="showPane('env')"><span class="material-symbols-outlined">air</span>Air</button>
-    <button class="tbt" id="tb-places" onclick="showPane('places')"><span class="material-symbols-outlined">pin_drop</span>Places</button>
-    <button class="tbt" id="tb-impact" onclick="showPane('impact')"><span class="material-symbols-outlined">trending_up</span>Stats</button>
+<!-- SHEET BACKDROP -->
+<div class="sheet-backdrop" id="backdrop"></div>
+
+<!-- ENVIRONMENT FLOAT -->
+<div class="env-float" id="envFloat">
+  <div class="env-float-icon ok" id="envIcon"><span class="material-symbols-outlined">check_circle</span></div>
+  <div class="env-float-txt">
+    <div class="env-float-title" id="envTitle">Checking conditions…</div>
+    <div class="env-float-sub" id="envSub">Fetching sensor data</div>
   </div>
+  <button class="env-float-btn" onclick="findRoutes()">Eco Route</button>
+  <button class="env-float-close" onclick="document.getElementById('envFloat').style.display='none'"><span class="material-symbols-outlined" style="font-size:16px">close</span></button>
+</div>
 
-  <!-- ROUTE PANEL -->
-  <div class="pnls"><div class="pnl on" id="pnl-route">
-    <div class="sl">Navigation</div>
-    <div class="route-input-box">
-      <div class="ri-row" id="fromRow">
-        <div class="ri-dot start"></div>
-        <input class="ri-input" id="fromInput" placeholder="From (leave blank = my location)" oninput="onFromSearch(this.value)" onfocus="this.parentElement.classList.add('focus-in')" onblur="blurFrom()"/>
-        <div class="ri-sug" id="fromSuggest"></div>
-      </div>
-      <div class="ri-row" id="toRow">
-        <div class="ri-dot end"></div>
-        <input class="ri-input" id="toInput" placeholder="To — destination" oninput="onToSearch(this.value)" onfocus="this.parentElement.classList.add('focus-in')" onblur="blurTo()"/>
-        <div class="ri-sug" id="toSuggest"></div>
-      </div>
-      <button class="go-btn" onclick="findRoutes()"><span class="material-symbols-outlined">near_me</span>Find Eco Routes</button>
+<!-- BOTTOM SHEET -->
+<div class="bottom-sheet sheet-peek" id="sheet" id="bottomSheet">
+  <div class="sheet-handle" id="sheetHandle"></div>
+  <div class="sheet-scroll">
+
+    <!-- TABS -->
+    <div class="sheet-tabs" style="margin-top:12px">
+      <button class="sheet-tab on" id="tab-route" onclick="showTab('route')">Route</button>
+      <button class="sheet-tab" id="tab-health" onclick="showTab('health')">Health</button>
+      <button class="sheet-tab" id="tab-env"    onclick="showTab('env')">Air</button>
+      <button class="sheet-tab" id="tab-places" onclick="showTab('places')">Places</button>
     </div>
 
-    <div class="sl">Travel Mode</div>
-    <div class="mg">
-      <button class="mb on" onclick="setMode(this,'walk')"><span class="material-symbols-outlined">directions_walk</span>Walk</button>
-      <button class="mb" onclick="setMode(this,'bike')"><span class="material-symbols-outlined">directions_bike</span>Bike</button>
-      <button class="mb" onclick="setMode(this,'bus')"><span class="material-symbols-outlined">directions_bus</span>Transit</button>
-      <button class="mb" onclick="setMode(this,'car')"><span class="material-symbols-outlined">directions_car</span>Drive</button>
+    <!-- ROUTE PANE -->
+    <div class="pane on" id="pane-route">
+      <!-- Inputs -->
+      <div class="route-inputs">
+        <div class="inp-row" id="fromRow">
+          <div class="inp-dot start"></div>
+          <input class="inp-field" id="fromInput" placeholder="From — my location" oninput="onFromSearch(this.value)" onfocus="this.parentElement.classList.add('focus-in')" onblur="blurFrom()"/>
+          <div class="inp-suggest" id="fromSuggest"></div>
+        </div>
+        <div style="padding:0 16px"><div style="width:2px;height:10px;background:var(--outline-var);border-radius:2px;margin:0 auto"></div></div>
+        <div class="inp-row" id="toRow">
+          <div class="inp-dot end"></div>
+          <input class="inp-field" id="toInput" placeholder="To — destination" oninput="onToSearch(this.value)" onfocus="this.parentElement.classList.add('focus-in')" onblur="blurTo()"/>
+          <div class="inp-suggest" id="toSuggest"></div>
+        </div>
+        <button class="find-btn" onclick="findRoutes()"><span class="material-symbols-outlined">near_me</span>Find Eco Routes</button>
+      </div>
+
+      <!-- Travel Mode -->
+      <div class="sec-label">Travel Mode</div>
+      <div class="mode-row">
+        <button class="mode-btn on" onclick="setMode(this,'walk')"><span class="material-symbols-outlined">directions_walk</span>Walk</button>
+        <button class="mode-btn" onclick="setMode(this,'bike')"><span class="material-symbols-outlined">directions_bike</span>Bike</button>
+        <button class="mode-btn" onclick="setMode(this,'bus')"><span class="material-symbols-outlined">directions_bus</span>Transit</button>
+        <button class="mode-btn" onclick="setMode(this,'car')"><span class="material-symbols-outlined">directions_car</span>Drive</button>
+      </div>
+
+      <!-- Preferences -->
+      <div class="sec-label">Route Preferences</div>
+      <div class="toggle-row"><div class="toggle-info"><h4>Avoid High AQI Zones</h4><p>Prefer cleaner air paths</p></div><label class="sw"><input type="checkbox" id="tAqi" checked onchange="reRank()"/><div class="sw-track"></div><div class="sw-knob"></div></label></div>
+      <div class="toggle-row"><div class="toggle-info"><h4>Avoid Noisy Roads</h4><p>Prefer quieter streets</p></div><label class="sw"><input type="checkbox" id="tNoise" checked onchange="reRank()"/><div class="sw-track"></div><div class="sw-knob"></div></label></div>
+      <div class="toggle-row"><div class="toggle-info"><h4>Avoid Pollen Zones</h4><p>For allergy sufferers</p></div><label class="sw"><input type="checkbox" id="tPollen" onchange="reRank()"/><div class="sw-track"></div><div class="sw-knob"></div></label></div>
+
+      <!-- Eco Score -->
+      <div class="sec-label">Eco Score</div>
+      <div class="score-card">
+        <div class="score-ring">
+          <svg viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(0,106,43,0.12)" stroke-width="8"/>
+            <circle id="scoreRing" cx="36" cy="36" r="28" fill="none" stroke="var(--primary)" stroke-width="8" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="60" style="transition:all 1s ease"/>
+          </svg>
+          <div class="score-ring-inner"><div class="score-num" id="scoreNum">72</div><div class="score-lbl">Score</div></div>
+        </div>
+        <div class="score-info">
+          <div class="score-title" id="scoreLbl">Loading…</div>
+          <div class="score-sub" id="scoreSub">Fetching data</div>
+          <div class="score-chips"><span class="chip" id="chipAqi">AQI —</span><span class="chip orange" id="chipPollen">Pollen —</span></div>
+        </div>
+      </div>
+
+      <!-- Routes -->
+      <div class="sec-label">Routes</div>
+      <div id="routeList"><div class="no-routes">Enter a destination and tap <b>Find Eco Routes</b></div></div>
+
+      <button class="nav-start" id="navBtn" onclick="toggleNav()"><span class="material-symbols-outlined">near_me</span>Start Navigation</button>
     </div>
 
-    <div class="sl">Route Preferences</div>
-    <div class="tr"><div class="ti"><h4>Avoid High AQI Zones</h4><p>Prefer cleaner air paths</p></div><label class="sw"><input type="checkbox" id="tAqi" checked onchange="reRank()"/><span class="sw-t"></span><span class="sw-k"></span></label></div>
-    <div class="tr"><div class="ti"><h4>Avoid Noisy Roads</h4><p>Prefer quieter streets</p></div><label class="sw"><input type="checkbox" id="tNoise" checked onchange="reRank()"/><span class="sw-t"></span><span class="sw-k"></span></label></div>
-    <div class="tr"><div class="ti"><h4>Avoid Pollen Zones</h4><p>For allergy sufferers</p></div><label class="sw"><input type="checkbox" id="tPollen" onchange="reRank()"/><span class="sw-t"></span><span class="sw-k"></span></label></div>
-
-    <div class="sl">Eco Score</div>
-    <div class="sc">
-      <div class="rw">
-        <svg width="60" height="60" viewBox="0 0 60 60">
-          <circle cx="30" cy="30" r="25" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="6"/>
-          <circle id="sring" cx="30" cy="30" r="25" fill="none" stroke="var(--safe)" stroke-width="6" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="50" style="transition:all 1s ease"/>
-        </svg>
-        <div class="rn"><div class="rv" id="sval">72</div><div class="rl">SCORE</div></div>
+    <!-- HEALTH PANE -->
+    <div class="pane" id="pane-health">
+      <div class="sec-label">Sensitivity Level</div>
+      <div class="health-grid">
+        <button class="health-btn on-g" id="hpNone" onclick="setHealth('none',this)"><span class="material-symbols-outlined">sentiment_satisfied</span>Healthy<br/><small>No issues</small></button>
+        <button class="health-btn" id="hpMild" onclick="setHealth('mild',this)"><span class="material-symbols-outlined">masks</span>Mild<br/><small>Some sensitivity</small></button>
+        <button class="health-btn" id="hpMod" onclick="setHealth('moderate',this)"><span class="material-symbols-outlined">personal_injury</span>Moderate<br/><small>Asthma/allergy</small></button>
+        <button class="health-btn" id="hpSev" onclick="setHealth('severe',this)"><span class="material-symbols-outlined">emergency</span>Severe<br/><small>COPD/heart</small></button>
       </div>
-      <div class="si">
-        <h2 id="slbl">Loading conditions…</h2>
-        <p id="ssub">Fetching sensor data</p>
-        <div class="chips"><span class="ch" id="cAqi">AQI —</span><span class="ch" id="cPollen">Pollen —</span></div>
+      <div class="health-info-box" id="healthDesc">Select your health profile for personalised route advice.</div>
+      <div class="sec-label">My Conditions</div>
+      <div class="cond-grid">
+        <button class="health-btn" id="cAsthma" onclick="toggleCondition('asthma',this)"><span class="material-symbols-outlined">air</span>Asthma</button>
+        <button class="health-btn" id="cAllergy" onclick="toggleCondition('allergy',this)"><span class="material-symbols-outlined">local_florist</span>Pollen Allergy</button>
+        <button class="health-btn" id="cHeart" onclick="toggleCondition('heart',this)"><span class="material-symbols-outlined">favorite</span>Heart Condition</button>
+        <button class="health-btn" id="cSkin" onclick="toggleCondition('skin',this)"><span class="material-symbols-outlined">healing</span>Skin Sensitivity</button>
+      </div>
+      <div class="toggle-row" style="margin-top:12px"><div class="toggle-info"><h4>Auto-Adjust Routes</h4><p>Routes adapt to your health profile</p></div><label class="sw"><input type="checkbox" id="tHealthAuto" checked onchange="reRank()"/><div class="sw-track"></div><div class="sw-knob"></div></label></div>
+      <div class="health-info-box" id="healthHint" style="margin-top:8px">Set your profile to see route adjustments.</div>
+    </div>
+
+    <!-- ENV PANE -->
+    <div class="pane" id="pane-env">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <div style="width:8px;height:8px;background:var(--primary);border-radius:50%;box-shadow:0 0 5px rgba(0,106,43,.4);animation:blink 2s ease-in-out infinite"></div>
+        <span style="font-size:.62rem;font-weight:700;color:var(--outline);text-transform:uppercase;letter-spacing:.08em">Live CSV Sensor Data</span>
+      </div>
+      @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+      <div id="envLoading" class="loading-row"><div class="spin"></div>Loading sensor data…</div>
+      <div class="metric-grid" id="metricGrid" style="display:none">
+        <div class="metric-card"><div class="metric-top"><span class="metric-icon">🌫️</span><span class="metric-badge" id="bAqi">—</span></div><div class="metric-val" id="mAqi">—</div><div class="metric-unit">AQI (US)</div><div class="metric-bar"><div class="metric-bar-fill" id="bAqiBar" style="width:0%"></div></div></div>
+        <div class="metric-card"><div class="metric-top"><span class="metric-icon">💨</span><span class="metric-badge" id="bPm25">—</span></div><div class="metric-val" id="mPm25">—</div><div class="metric-unit">PM2.5 μg/m³</div><div class="metric-bar"><div class="metric-bar-fill" id="bPm25Bar" style="width:0%"></div></div></div>
+        <div class="metric-card"><div class="metric-top"><span class="metric-icon">🔊</span><span class="metric-badge badge-g" id="bNs">CSV</span></div><div class="metric-val" id="mNoise">68</div><div class="metric-unit">Noise dB</div><div class="metric-bar"><div class="metric-bar-fill" id="bNsBar" style="width:55%;background:#765600"></div></div></div>
+        <div class="metric-card"><div class="metric-top"><span class="metric-icon">🌿</span><span class="metric-badge" id="bGrass">—</span></div><div class="metric-val" id="mGrass">—</div><div class="metric-unit">Grass Pollen</div><div class="metric-bar"><div class="metric-bar-fill" id="bGrassBar" style="width:0%;background:#7c3aed"></div></div></div>
+        <div class="metric-card"><div class="metric-top"><span class="metric-icon">🌳</span><span class="metric-badge" id="bTree">—</span></div><div class="metric-val" id="mTree">—</div><div class="metric-unit">Tree Pollen</div><div class="metric-bar"><div class="metric-bar-fill" id="bTreeBar" style="width:0%;background:#7c3aed"></div></div></div>
+        <div class="metric-card"><div class="metric-top"><span class="metric-icon">☀️</span><span class="metric-badge badge-m">UV</span></div><div class="metric-val" id="mUv">—</div><div class="metric-unit">UV Index</div><div class="metric-bar"><div class="metric-bar-fill" id="bUvBar" style="width:0%;background:#765600"></div></div></div>
+      </div>
+      <div class="sec-label" style="margin-top:16px">Your Data</div>
+      <div style="background:var(--surface-low);border-radius:14px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><div style="width:8px;height:8px;border-radius:50%;background:var(--primary)"></div><span style="font-size:.76rem;font-weight:700">AQI CSV — Indore Sensor</span></div>
+        <div style="font-size:.66rem;color:var(--on-surface-var)">22.71°N 75.83°E · Avg 60.3 · Max 283 · 990 readings</div>
+      </div>
+      <div style="background:var(--surface-low);border-radius:14px;padding:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><div style="width:8px;height:8px;border-radius:50%;background:var(--secondary)"></div><span style="font-size:.76rem;font-weight:700">Decibel CSVs — Campus</span></div>
+        <div style="font-size:.66rem;color:var(--on-surface-var)">26.24°N 78.17°E · 56–82 dB · 485 GPS points · 6 files</div>
       </div>
     </div>
 
-    <div class="sl">Routes</div>
-    <div id="rl"><div class="no-route">Enter a destination above and tap <b>Find Eco Routes</b></div></div>
-
-    <button class="ct" id="navBtn" onclick="toggleNav()"><span class="material-symbols-outlined">near_me</span>Start Navigation</button>
-  </div>
-
-  <!-- HEALTH PANEL -->
-  <div class="pnl" id="pnl-health">
-    <div class="sl">Your Health Profile</div>
-    <div class="hp">
-      <h3><span class="material-symbols-outlined">health_and_safety</span>Sensitivity Level</h3>
-      <div class="hp-grid">
-        <button class="hp-btn" id="hpNone" onclick="setHealth('none',this)"><span class="material-symbols-outlined">sentiment_satisfied</span>Healthy<br/>No issues</button>
-        <button class="hp-btn" id="hpMild" onclick="setHealth('mild',this)"><span class="material-symbols-outlined">masks</span>Mild<br/>Mild sensitivity</button>
-        <button class="hp-btn" id="hpMod" onclick="setHealth('moderate',this)"><span class="material-symbols-outlined">personal_injury</span>Moderate<br/>Asthma / allergy</button>
-        <button class="hp-btn" id="hpSev" onclick="setHealth('severe',this)"><span class="material-symbols-outlined">emergency</span>Severe<br/>COPD / heart</button>
+    <!-- PLACES PANE -->
+    <div class="pane" id="pane-places">
+      <div class="cat-row" id="catRow">
+        <button class="cat-chip on" onclick="filterCat('all',this)">All</button>
+        <button class="cat-chip" onclick="filterCat('campus',this)">Campus</button>
+        <button class="cat-chip" onclick="filterCat('home',this)">Home</button>
+        <button class="cat-chip" onclick="filterCat('work',this)">Work</button>
+        <button class="cat-chip" onclick="filterCat('other',this)">Other</button>
       </div>
-    </div>
-    <div class="health-info show" id="healthDesc">Select your health profile to get personalized route recommendations.</div>
-
-    <div class="sl">Conditions</div>
-    <div class="hp">
-      <h3><span class="material-symbols-outlined">medical_information</span>My Conditions</h3>
-      <div class="hp-grid">
-        <button class="hp-btn" id="cAsthma" onclick="toggleCondition('asthma',this)"><span class="material-symbols-outlined">air</span>Asthma</button>
-        <button class="hp-btn" id="cAllergy" onclick="toggleCondition('allergy',this)"><span class="material-symbols-outlined">local_florist</span>Pollen Allergy</button>
-        <button class="hp-btn" id="cHeart" onclick="toggleCondition('heart',this)"><span class="material-symbols-outlined">favorite</span>Heart Condition</button>
-        <button class="hp-btn" id="cSkin" onclick="toggleCondition('skin',this)"><span class="material-symbols-outlined">healing</span>Skin Sensitivity</button>
-      </div>
-    </div>
-
-    <div class="sl">Route Priority (based on health)</div>
-    <div class="tr"><div class="ti"><h4>Auto-adjust Routes</h4><p>Routes adapt to your health profile</p></div><label class="sw"><input type="checkbox" id="tHealthAuto" checked onchange="reRank()"/><span class="sw-t"></span><span class="sw-k"></span></label></div>
-    <div style="font-size:.64rem;color:var(--muted);padding:4px 0" id="healthRouteHint">Set a health profile to see how routes change</div>
-  </div>
-
-  <!-- ENV PANEL -->
-  <div class="pnl" id="pnl-env">
-    <div class="sl">Live Sensor Data <span class="sdot-row" style="display:inline-flex;margin-left:6px"><span class="sdot live"></span>REAL CSV</span></div>
-    <div id="envLd" class="ld"><div class="sp"></div>Loading sensor data…</div>
-    <div class="mxg" id="mxg" style="display:none">
-      <div class="mx"><div class="mxt"><span class="mxi">🌫️</span><span class="bx" id="bAqi">—</span></div><div class="mv" id="mAqi">—</div><div class="mu2">AQI (US)</div><div class="mb2"><div class="mbf" id="bAqiBar" style="width:0%"></div></div></div>
-      <div class="mx"><div class="mxt"><span class="mxi">💨</span><span class="bx" id="bPm25">—</span></div><div class="mv" id="mPm25">—</div><div class="mu2">PM2.5 μg/m³</div><div class="mb2"><div class="mbf" id="bPm25Bar" style="width:0%"></div></div></div>
-      <div class="mx"><div class="mxt"><span class="mxi">🔊</span><span class="bx" id="bNs">SENSOR</span></div><div class="mv" id="mNoise">—</div><div class="mu2">Noise dB</div><div class="mb2"><div class="mbf" id="bNsBar" style="width:0%;background:var(--noise-safe)"></div></div></div>
-      <div class="mx"><div class="mxt"><span class="mxi">🌿</span><span class="bx" id="bGrass">—</span></div><div class="mv" id="mGrass">—</div><div class="mu2">Grass Pollen</div><div class="mb2"><div class="mbf" id="bGrassBar" style="width:0%;background:#A78BFA"></div></div></div>
-      <div class="mx"><div class="mxt"><span class="mxi">🌳</span><span class="bx" id="bTree">—</span></div><div class="mv" id="mTree">—</div><div class="mu2">Tree Pollen</div><div class="mb2"><div class="mbf" id="bTreeBar" style="width:0%;background:#A78BFA"></div></div></div>
-      <div class="mx"><div class="mxt"><span class="mxi">☀️</span><span class="bx sb-m">UV</span></div><div class="mv" id="mUv">—</div><div class="mu2">UV Index</div><div class="mb2"><div class="mbf" id="bUvBar" style="width:0%;background:#F59E0B"></div></div></div>
-    </div>
-    <div class="sl">Sensor Source</div>
-    <div class="ai"><div class="ad g"></div><div class="at"><h4>AQI — Your CSV Data</h4><p>Indore sensor: 22.71°N 75.83°E · Avg AQI 60.3</p><div class="atm">Max recorded: 283 · 990 readings</div></div></div>
-    <div class="ai"><div class="ad g"></div><div class="at"><h4>Noise — Your Decibel CSVs</h4><p>Gwalior campus: 26.24°N 78.17°E · 56–82 dB</p><div class="atm">485 GPS-tagged readings · 6 files</div></div></div>
-    <div class="sl">Live Alerts</div>
-    <div id="alertsList"><div class="ld"><div class="sp"></div>Loading…</div></div>
-  </div>
-
-  <!-- PLACES PANEL -->
-  <div class="pnl" id="pnl-places">
-    <div class="sl">My Custom Locations</div>
-    <div class="loc-panel">
-      <h3><span class="material-symbols-outlined">pin_drop</span>Saved Locations</h3>
-      <div class="cat-pills" id="catPills">
-        <button class="cat-pill on" onclick="filterCat('all',this)">All</button>
-        <button class="cat-pill" onclick="filterCat('campus',this)">Campus</button>
-        <button class="cat-pill" onclick="filterCat('home',this)">Home</button>
-        <button class="cat-pill" onclick="filterCat('work',this)">Work</button>
-        <button class="cat-pill" onclick="filterCat('other',this)">Other</button>
-      </div>
-      <div class="loc-list" id="locList"></div>
-      <div class="sl" style="margin-bottom:5px">Add New Location</div>
-      <div class="add-loc-form">
-        <input id="newLocName" placeholder="Location name (e.g. Library, Gate 2)"/>
-        <input id="newLocAddr" placeholder="Address or leave blank to pin on map"/>
-        <select id="newLocCat" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:7px;padding:7px 9px;font-family:'Space Grotesk',sans-serif;font-size:.72rem;color:var(--text);outline:none;">
-          <option value="campus" style="background:#131F2E">Campus</option>
-          <option value="home" style="background:#131F2E">Home</option>
-          <option value="work" style="background:#131F2E">Work</option>
-          <option value="other" style="background:#131F2E">Other</option>
+      <div id="locList"></div>
+      <div class="sec-label">Add Location</div>
+      <div class="add-form">
+        <input class="add-inp" id="newLocName" placeholder="Location name (e.g. Library, Gate 2)"/>
+        <input class="add-inp" id="newLocAddr" placeholder="Address — or pin on map below"/>
+        <select class="add-sel" id="newLocCat">
+          <option value="campus">Campus</option>
+          <option value="home">Home</option>
+          <option value="work">Work</option>
+          <option value="other">Other</option>
         </select>
-        <div class="loc-form-row">
-          <button class="pin-loc-btn" id="pinModeBtn" onclick="togglePinMode()"><span class="material-symbols-outlined">add_location</span>Pin on Map</button>
-          <button class="add-loc-btn" onclick="addLocationByAddress()">Save Location</button>
+        <div class="add-row">
+          <button class="pin-btn" id="pinModeBtn" onclick="togglePinMode()"><span class="material-symbols-outlined">add_location</span>Pin on Map</button>
+          <button class="add-btn" onclick="addLocationByAddress()">Save Location</button>
         </div>
       </div>
     </div>
+
+  </div><!-- /sheet-scroll -->
+</div><!-- /bottom-sheet -->
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="bnav-item on" id="bnav-route" onclick="showTab('route');setActiveNav('route')">
+    <span class="material-symbols-outlined">alt_route</span>
+    <span class="bnav-lbl">Route</span>
   </div>
-
-  <!-- IMPACT PANEL -->
-  <div class="pnl" id="pnl-impact">
-    <div class="sl">Session Impact</div>
-    <div class="ig">
-      <div class="is"><div class="iv" id="iC">0.0</div><div class="iu">kg CO₂</div><div class="il">Saved</div></div>
-      <div class="is"><div class="iv" id="iT">0</div><div class="iu">min</div><div class="il">Green Time</div></div>
-      <div class="is"><div class="iv" id="iP">0</div><div class="iu">AQI pts</div><div class="il">Avoided</div></div>
-    </div>
-    <div class="sl">Pollution Profile (from CSV)</div>
-    <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:11px;padding:10px;">
-      <div style="font-size:.62rem;color:var(--muted);margin-bottom:8px">Hourly AQI pattern from your sensor data</div>
-      <div id="aqiChart" style="display:flex;align-items:flex-end;gap:3px;height:60px;margin-bottom:5px">
-        <!-- JS renders bars -->
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:.5rem;color:var(--muted);font-family:'JetBrains Mono',monospace">
-        <span>18:00</span><span>19:00</span><span>21:00</span><span>22:00</span>
-      </div>
-    </div>
-    <div class="sl">Noise Profile (from CSV)</div>
-    <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:11px;padding:10px;">
-      <div style="font-size:.62rem;color:var(--muted);margin-bottom:6px">Min/Avg/Max dB from your decibel files</div>
-      <div style="display:flex;gap:6px">
-        <div style="flex:1;text-align:center"><div style="font-size:1.1rem;font-weight:700;color:var(--noise-safe);font-family:'JetBrains Mono',monospace">56</div><div style="font-size:.52rem;color:var(--muted)">Min dB</div></div>
-        <div style="flex:1;text-align:center"><div style="font-size:1.1rem;font-weight:700;color:var(--noise-mod);font-family:'JetBrains Mono',monospace">68</div><div style="font-size:.52rem;color:var(--muted)">Avg dB</div></div>
-        <div style="flex:1;text-align:center"><div style="font-size:1.1rem;font-weight:700;color:var(--noise-haz);font-family:'JetBrains Mono',monospace">82</div><div style="font-size:.52rem;color:var(--muted)">Max dB</div></div>
-      </div>
-    </div>
-  </div></div>
-</div>
-
-<!-- MAP -->
-<div class="mw">
-  <div id="map"></div>
-
-  <!-- AQI badge -->
-  <div class="otl">
-    <div class="gc aqi-badge">
-      <div class="ab-val" id="aqiBadgeVal" style="color:var(--mod)">—</div>
-      <div class="ab-lbl">AQI · CSV</div>
-      <div class="ab-loc" id="aqiBadgeLoc">Loading…</div>
-    </div>
-    <div class="gc nw">
-      <div class="nbs"><div class="nb"></div><div class="nb"></div><div class="nb"></div><div class="nb"></div><div class="nb"></div></div>
-      <div><div class="nv" id="ndsp">—</div><div class="nl">dB · CSV</div></div>
-    </div>
+  <div class="bnav-item" id="bnav-health" onclick="showTab('health');setActiveNav('health')">
+    <span class="material-symbols-outlined">health_and_safety</span>
+    <span class="bnav-lbl">Health</span>
   </div>
-
-  <!-- Layer controls -->
-  <div class="otr">
-    <div class="gc lc">
-      <button class="lb on" id="lAqi" onclick="toggleLayer('aqi')"><span class="material-symbols-outlined">air</span><span class="lbt">AQI Heatmap</span></button>
-      <button class="lb" id="lNoise" onclick="toggleLayer('noise')"><span class="material-symbols-outlined">volume_up</span><span class="lbt">Noise Heatmap</span></button>
-      <button class="lb" id="lPollen" onclick="toggleLayer('pollen')"><span class="material-symbols-outlined">local_florist</span><span class="lbt">Pollen Map</span></button>
-      <button class="lb" id="lPins" onclick="toggleLayer('pins')"><span class="material-symbols-outlined">pin_drop</span><span class="lbt">My Places</span></button>
-    </div>
+  <div class="bnav-fab" onclick="locateMe()">
+    <span class="material-symbols-outlined filled">explore</span>
   </div>
-
-  <!-- Legend -->
-  <div class="obl">
-    <div class="gc leg">
-      <div class="leg-t">Heatmap Key</div>
-      <div class="leg-i"><div class="ld2" style="background:rgba(0,200,150,0.8)"></div>Clean</div>
-      <div class="leg-i"><div class="ld2" style="background:rgba(245,158,11,0.9)"></div>Moderate</div>
-      <div class="leg-i"><div class="ld2" style="background:rgba(239,68,68,1)"></div>Hazardous</div>
-    </div>
+  <div class="bnav-item" id="bnav-env" onclick="showTab('env');setActiveNav('env')">
+    <span class="material-symbols-outlined">air</span>
+    <span class="bnav-lbl">Air</span>
   </div>
-
-  <!-- Floating pollution alert -->
-  <div class="pa" id="polA">
-    <div class="pi g" id="paIcon"><span class="material-symbols-outlined">check_circle</span></div>
-    <div class="pt">
-      <h3 id="paTitle">Checking conditions…</h3>
-      <p id="paDesc">Fetching sensor data</p>
-      <button class="ab" onclick="if(routeData.length>0)selRoute(document.querySelector('.rc.eco'),0);else findRoutes()"><span class="material-symbols-outlined" style="font-size:11px">route</span>Eco Route</button>
-    </div>
-    <button class="pc" onclick="dimAlert()"><span class="material-symbols-outlined">close</span></button>
+  <div class="bnav-item" id="bnav-places" onclick="showTab('places');setActiveNav('places')">
+    <span class="material-symbols-outlined">pin_drop</span>
+    <span class="bnav-lbl">Places</span>
   </div>
-
-  <!-- Proximity alert -->
-  <div class="prox-alert" id="proxAlert">
-    <span class="pa-icon material-symbols-outlined">warning</span>
-    <div class="pa-text"><strong id="proxTitle">Hazard Zone Ahead</strong><span id="proxSub">High pollution detected on route</span></div>
-    <button class="pa-close" onclick="document.getElementById('proxAlert').classList.remove('show')"><span class="material-symbols-outlined">close</span></button>
-  </div>
-
-  <!-- Pin mode bar -->
-  <div class="pin-mode-bar" id="pinModeBar">
-    <span class="material-symbols-outlined">add_location_alt</span>
-    <p>Click anywhere on the map to drop a pin</p>
-    <button class="pin-cancel" onclick="togglePinMode()">Cancel</button>
-  </div>
-
-  <!-- Nav button -->
-  <div class="nav-panel">
-    <button id="navBtn" onclick="toggleNav()"><span class="material-symbols-outlined">near_me</span>Start Navigation</button>
-  </div>
-</div>
-</div>
+</nav>
 
 <div class="tw" id="tw"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script>
-// ═══════════════════════════════════════
-// REAL SENSOR DATA FROM CSV FILES
-// ═══════════════════════════════════════
-// Decibel GPS data (Gwalior campus area)
-const DECIBEL_DATA = [[26.251104,78.172547,76.5],[26.251103,78.172548,75.6],[26.251114,78.172583,74.9],[26.251104,78.172627,73.1],[26.251079,78.172672,71.9],[26.251072,78.172672,70.3],[26.251046,78.172672,68.8],[26.251136,78.172687,67.7],[26.251131,78.172719,67.7],[26.251125,78.17276,67.8],[26.25102,78.172686,67.7],[26.250993,78.172707,67.5],[26.250983,78.172733,67.1],[26.250979,78.172777,66.3],[26.250972,78.172811,66.3],[26.250972,78.172811,65.7],[26.251145,78.173066,65.8],[26.251148,78.173091,66.0],[26.25113,78.173102,66.0],[26.25113,78.173102,66.2],[26.251123,78.173075,67.0],[26.251123,78.173075,67.1],[26.251123,78.173075,67.1],[26.251132,78.173047,67.6],[26.251132,78.173047,67.9],[26.251161,78.173035,67.8],[26.251161,78.173035,67.1],[26.251161,78.173035,67.0],[26.251162,78.172952,67.0],[26.251162,78.172952,67.2],[26.251105,78.172909,67.2],[26.251105,78.172909,67.5],[26.251105,78.172909,69.4],[26.251004,78.172687,70.5],[26.251004,78.172687,71.2],[26.250992,78.172635,71.3],[26.250902,78.172603,71.7],[26.250902,78.172603,73.5],[26.250902,78.172603,74.4],[26.25095,78.172553,73.6],[26.250937,78.172552,72.4],[26.250921,78.172549,72.1],[26.250899,78.172571,71.7],[26.250881,78.172594,71.7],[26.250891,78.172638,71.1],[26.250897,78.172682,71.1],[26.250917,78.17275,71.0],[26.250923,78.172784,70.4],[26.250923,78.172837,69.7],[26.250883,78.172919,69.3],[26.250849,78.172949,68.7],[26.250815,78.172952,68.4],[26.250761,78.173033,69.4],[26.250757,78.173037,71.1],[26.250757,78.173037,71.1],[26.250751,78.173081,71.1],[26.250749,78.173128,73.3],[26.250749,78.173128,73.6],[26.250717,78.173158,73.4],[26.250717,78.173158,72.7],[26.25072,78.173149,72.0],[26.25072,78.173149,70.9],[26.250756,78.173165,70.6],[26.250746,78.173165,70.0],[26.250746,78.173165,69.6],[26.250746,78.173165,68.1],[26.250774,78.173079,67.6],[26.250774,78.173079,67.5],[26.250708,78.173124,67.3],[26.250659,78.17314,67.0],[26.25067,78.173144,67.5],[26.250602,78.173122,67.9],[26.250578,78.173114,67.9],[26.25053,78.173131,68.8],[26.250488,78.173151,68.9],[26.250456,78.17319,68.4],[26.250465,78.173239,67.1],[26.25047,78.173287,66.3],[26.250478,78.173322,66.2],[26.250438,78.17333,66.7],[26.25044,78.173386,66.7],[26.250435,78.173417,66.2],[26.250435,78.173417,66.5],[26.250338,78.173419,66.5],[26.250338,78.173419,66.1],[26.250269,78.173341,66.2],[26.250257,78.173328,67.0],[26.250462,78.173508,67.2],[26.250471,78.173484,68.1],[26.25046,78.173519,68.4],[26.250444,78.173565,70.8],[26.250413,78.173601,71.5],[26.250404,78.173594,71.7],[26.250399,78.17358,72.7],[26.25038,78.173596,73.2],[26.250343,78.173643,73.7],[26.250308,78.173677,73.9],[26.250249,78.173713,73.9],[26.25021,78.173745,72.8],[26.250158,78.17378,72.8],[26.250124,78.173805,75.0],[26.2501,78.17384,77.6],[26.25007,78.173844,79.5],[26.250027,78.173857,79.0],[26.249998,78.173864,78.7],[26.249966,78.173885,77.5],[26.249925,78.173893,76.6],[26.249897,78.1739,76.2],[26.249868,78.173893,77.1],[26.249817,78.173885,78.4],[26.249774,78.173865,78.1],[26.249754,78.17387,78.1],[26.249722,78.173917,81.0],[26.249677,78.173948,81.2],[26.249654,78.173957,80.9],[26.24961,78.173969,79.9],[26.24961,78.173969,78.8],[26.249524,78.174054,77.5],[26.249466,78.174106,77.2],[26.24945,78.17412,77.1],[26.24945,78.17412,77.8],[26.249373,78.174147,77.8],[26.249357,78.174150,76.0],[26.249324,78.174154,74.2],[26.249271,78.174230,72.7],[26.249259,78.174242,71.8],[26.249253,78.174244,72.2],[26.249253,78.174244,73.6],[26.249234,78.174213,74.4],[26.249234,78.174213,76.6],[26.249356,78.174162,76.8],[26.249356,78.174162,78.3],[26.249385,78.174154,78.3],[26.249385,78.174154,76.6],[26.249385,78.174154,75.2],[26.249465,78.173966,75.1],[26.249447,78.173888,75.0],[26.249442,78.173837,75.4],[26.249429,78.173807,76.0],[26.249447,78.173757,76.0],[26.249448,78.173719,74.1],[26.249447,78.173687,73.5],[26.249441,78.173659,73.9],[26.249445,78.173607,77.3],[26.249433,78.173566,77.3],[26.249402,78.173539,75.9],[26.249393,78.173501,75.5],[26.249374,78.17346,74.8],[26.249357,78.173424,74.4],[26.249358,78.173368,73.3],[26.249353,78.173323,73.3],[26.249347,78.173283,72.9],[26.249338,78.173233,72.9],[26.249338,78.173196,73.3],[26.249331,78.173153,74.8],[26.249325,78.17312,75.2],[26.249322,78.173084,74.5],[26.2493,78.17303,73.1],[26.249283,78.172981,72.3],[26.249264,78.172951,72.2],[26.24926,78.172924,71.8],[26.249233,78.172878,71.9],[26.249235,78.172856,71.9],[26.249233,78.17282,73.5],[26.249229,78.17281,73.5],[26.249223,78.172771,73.5],[26.249219,78.172766,74.4],[26.249215,78.172771,73.4],[26.249215,78.172771,71.6],[26.249215,78.172771,70.6],[26.247981,78.17751,66.7],[26.247987,78.17757,66.0],[26.247976,78.17764,65.0],[26.247978,78.177689,63.8],[26.247978,78.177742,63.6],[26.247988,78.17778,63.5],[26.247994,78.177812,62.8],[26.24799,78.177868,62.0],[26.247973,78.177911,62.0],[26.247959,78.177939,62.5],[26.247964,78.177888,62.8],[26.247982,78.177822,63.1],[26.247977,78.177773,63.5],[26.247974,78.177716,63.4],[26.247971,78.177655,62.6],[26.247969,78.177610,62.1],[26.247975,78.177541,62.0],[26.247989,78.177481,62.0],[26.247989,78.177439,62.6],[26.24799,78.177382,62.4],[26.247993,78.177342,61.7],[26.247996,78.177295,60.8],[26.247994,78.177258,60.6],[26.247992,78.177204,60.3],[26.248012,78.177169,60.1],[26.248053,78.177154,60.0],[26.248097,78.177151,60.1],[26.248156,78.177153,60.0],[26.248216,78.177157,59.6],[26.248257,78.177153,59.6],[26.248312,78.177149,59.6],[26.248372,78.177158,59.7],[26.248412,78.177169,59.7],[26.248455,78.17718,60.2],[26.248487,78.177192,60.6],[26.248514,78.177247,61.2],[26.248523,78.177297,61.7],[26.248516,78.177363,61.7],[26.248472,78.177408,61.3],[26.248426,78.177442,61.3],[26.248396,78.177484,61.4],[26.248354,78.177526,61.7],[26.248324,78.177562,62.1],[26.248292,78.177609,65.6],[26.248281,78.177776,56.2],[26.248245,78.177732,56.7],[26.248186,78.177824,57.6],[26.248166,78.177848,59.3],[26.248156,78.177867,61.5],[26.248139,78.177893,63.2],[26.248139,78.177893,63.6],[26.24812,78.177906,64.0],[26.24812,78.177906,65.2],[26.248095,78.178016,66.3],[26.248109,78.178065,67.5],[26.248108,78.178135,67.5],[26.248114,78.178199,66.5],[26.248209,78.178397,66.0],[26.248203,78.178456,66.1],[26.248194,78.178517,66.1],[26.248192,78.178585,65.5],[26.248204,78.178648,64.8],[26.248211,78.178696,64.7],[26.248212,78.17875,64.3],[26.248203,78.178819,63.7],[26.248196,78.178863,63.4],[26.248181,78.178938,64.2],[26.248163,78.179012,64.6],[26.248140,78.179069,64.3],[26.248127,78.179114,64.2],[26.248077,78.179173,64.2],[26.248054,78.179224,67.6],[26.248031,78.179288,68.5],[26.24802,78.179327,68.5],[26.247999,78.179384,67.5],[26.247981,78.179433,66.8],[26.247957,78.179485,66.3],[26.247925,78.179523,66.2],[26.247905,78.179559,65.0],[26.247883,78.179606,65.0],[26.247892,78.179624,65.2],[26.247942,78.179528,65.6],[26.247982,78.179472,65.6],[26.247994,78.179418,66.4],[26.24802,78.179357,67.2],[26.24802,78.179357,69.3],[26.247988,78.179328,70.6],[26.247958,78.179269,71.0],[26.247971,78.179135,70.1],[26.247981,78.179085,68.7],[26.248065,78.179026,67.2],[26.248121,78.178983,66.1],[26.248104,78.178916,66.1],[26.248111,78.178838,66.4],[26.24811,78.17879,66.4],[26.248112,78.178747,66.4],[26.248121,78.178682,66.3],[26.248124,78.178642,66.4],[26.248128,78.178583,66.0],[26.248129,78.178535,65.8],[26.2481,78.178473,65.6],[26.248078,78.178436,64.9],[26.248051,78.178415,64.8],[26.248035,78.178391,65.1],[26.247997,78.178351,65.1],[26.24796,78.178309,63.9],[26.24793,78.17825,63.0],[26.2479,78.178217,62.8],[26.247859,78.178218,62.6],[26.24782,78.178225,62.2],[26.247772,78.178233,61.9],[26.247734,78.178238,61.4],[26.247681,78.178253,61.1],[26.247640,78.178256,61.0],[26.247587,78.178261,60.8],[26.247547,78.178262,60.8],[26.24749,78.178263,62.0],[26.247449,78.178262,64.2],[26.247413,78.178265,64.2],[26.247353,78.178260,64.0],[26.24731,78.178266,63.7],[26.247269,78.178257,64.2],[26.247226,78.178242,65.8],[26.247242,78.178233,66.6],[26.247242,78.178236,68.5],[26.247242,78.178228,69.2],[26.247244,78.178219,69.2],[26.247243,78.178216,69.0],[26.247241,78.178222,68.6],[26.247648,78.174558,70.2],[26.247627,78.174559,69.6],[26.24763,78.174463,69.1],[26.247635,78.17443,68.5],[26.247627,78.174394,68.8],[26.247597,78.174317,68.8],[26.247597,78.174317,68.5],[26.247569,78.174225,69.4],[26.247561,78.17415,69.7],[26.247548,78.174072,70.4],[26.247544,78.174027,71.6],[26.24755,78.17396,71.6],[26.247552,78.173905,71.9],[26.247554,78.173887,72.3],[26.247552,78.173864,72.3],[26.247541,78.173798,73.0],[26.247537,78.173758,73.0],[26.247573,78.173673,73.9],[26.247562,78.173616,76.2],[26.247566,78.17358,76.0],[26.247574,78.173541,74.8],[26.247587,78.173504,73.8],[26.247587,78.173504,72.8],[26.247587,78.173504,72.5],[26.247587,78.173504,72.7],[26.247587,78.173504,73.1],[26.247587,78.173504,72.5],[26.247587,78.173504,72.0],[26.247587,78.173504,71.2],[26.247587,78.173504,71.2],[26.247587,78.173504,71.2],[26.247587,78.173504,71.1],[26.247587,78.173504,69.1],[26.247647,78.17297,81.9],[26.24766,78.172949,81.4],[26.247716,78.172925,80.6],[26.247751,78.172873,79.5],[26.247774,78.172829,78.3],[26.247790,78.172777,76.1],[26.247806,78.172740,73.8],[26.247837,78.172699,73.0],[26.247852,78.172678,71.9],[26.247847,78.172615,71.1],[26.247867,78.172559,69.4],[26.247905,78.172517,67.7],[26.247984,78.172448,66.1],[26.248022,78.172424,65.0],[26.248053,78.172388,63.9],[26.248078,78.172361,63.1],[26.248110,78.172319,62.5],[26.24813,78.172289,62.5],[26.248164,78.172258,62.4],[26.248199,78.172228,62.2],[26.24822,78.172217,62.2],[26.248272,78.172149,62.3],[26.248331,78.172112,62.6],[26.248371,78.172095,62.8],[26.248397,78.172063,62.8],[26.248458,78.172024,62.7],[26.248489,78.172008,62.3],[26.24852,78.171984,62.3],[26.248557,78.171951,63.3],[26.248604,78.171934,63.8],[26.248631,78.171913,64.8],[26.248672,78.171889,65.2],[26.248703,78.171877,64.8],[26.248749,78.171871,65.6],[26.248786,78.171871,66.1],[26.248833,78.171854,65.6],[26.248878,78.171838,65.3],[26.248917,78.171845,66.6],[26.248945,78.171822,67.2],[26.248945,78.171822,67.3],[26.248954,78.171818,66.8],[26.249029,78.171775,66.8],[26.249076,78.171717,66.8],[26.249137,78.171697,67.1],[26.249182,78.171698,67.4],[26.249218,78.171698,67.6],[26.249276,78.171686,68.3],[26.249324,78.171666,69.5],[26.249324,78.171666,69.5],[26.249379,78.171909,69.5],[26.249401,78.171687,69.8],[26.24941,78.171675,69.8],[26.249477,78.171664,71.0],[26.249515,78.17166,71.1],[26.249554,78.171644,71.6],[26.24959,78.17163,71.6],[26.249647,78.171597,70.5],[26.249692,78.171578,69.8],[26.249741,78.17157,69.3],[26.249783,78.171559,69.3],[26.249818,78.171556,68.8],[26.249862,78.171565,68.4],[26.249881,78.171578,68.1],[26.249899,78.171587,68.0],[26.249915,78.171595,67.8],[26.250043,78.171506,68.1],[26.250093,78.171494,68.0],[26.250115,78.171458,68.0],[26.25014,78.171425,68.0],[26.250162,78.171384,67.6],[26.250169,78.171337,66.5],[26.250169,78.171337,65.9],[26.250169,78.171337,65.2],[26.250169,78.171337,65.2],[26.250169,78.171337,65.4],[26.250169,78.171337,66.0],[26.250169,78.171337,65.6],[26.250169,78.171337,64.8],[26.246858,78.177558,64.9],[26.246868,78.177555,65.8],[26.246874,78.177553,66.4],[26.246894,78.177553,66.4],[26.246905,78.17756,65.7],[26.246941,78.177582,64.5],[26.246991,78.177594,64.1],[26.247004,78.177573,63.5],[26.247042,78.177524,62.3],[26.247055,78.177481,61.3],[26.247058,78.177415,60.7],[26.24706,78.177362,59.9],[26.247064,78.177319,59.3],[26.247065,78.177262,59.3],[26.247073,78.177218,59.7],[26.247081,78.177180,59.7],[26.247101,78.177124,59.8],[26.247136,78.177097,59.7],[26.247174,78.177097,59.6],[26.247230,78.177094,59.5],[26.247263,78.177090,59.1],[26.247277,78.177088,58.9],[26.247277,78.177088,58.9],[26.247277,78.177088,59.3],[26.247277,78.177088,60.6],[26.247277,78.177088,62.8],[26.247277,78.177088,63.3],[26.247277,78.177088,62.9],[26.247277,78.177088,62.6],[26.247277,78.177088,62.1],[26.247277,78.177088,62.2],[26.247277,78.177088,62.0],[26.247277,78.177088,61.9],[26.247277,78.177088,61.4],[26.247277,78.177088,61.0],[26.247277,78.177088,60.8],[26.247277,78.177088,60.4],[26.247277,78.177088,60.3],[26.247277,78.177088,60.3],[26.247277,78.177088,61.4],[26.247277,78.177088,62.0],[26.247277,78.177088,62.5],[26.247277,78.177088,62.4],[26.250016,78.171222,79.5],[26.250006,78.171179,78.7],[26.249982,78.171119,77.8],[26.249846,78.170957,76.2],[26.249814,78.170903,74.4],[26.249810,78.170875,74.3],[26.249807,78.170839,74.0],[26.249803,78.170803,73.0],[26.249804,78.170824,72.3],[26.249798,78.170803,71.5],[26.249832,78.170694,71.1],[26.249836,78.170680,70.3],[26.249836,78.170680,69.6],[26.24989,78.170472,69.8],[26.249948,78.170406,71.0],[26.249978,78.170362,71.5],[26.250018,78.17036,71.6],[26.250049,78.170367,71.1],[26.250092,78.170324,69.6],[26.250128,78.170304,68.5],[26.250151,78.170282,67.5],[26.250151,78.170282,67.3],[26.250151,78.170282,66.5],[26.250151,78.170282,66.5],[26.250151,78.170282,68.2],[26.250151,78.170282,69.7],[26.250151,78.170282,70.0],[26.250151,78.170282,70.3],[26.250151,78.170282,71.0],[26.250151,78.170282,72.2],[26.250151,78.170282,72.2],[26.250151,78.170282,71.6]];
+// ═══════════ REAL DECIBEL DATA (GPS-tagged) ═══════════
+const DECIBEL_DATA=[[26.251104,78.172547,76.5],[26.251103,78.172548,75.6],[26.251104,78.172627,73.1],[26.251046,78.172672,68.8],[26.251131,78.172719,67.7],[26.250972,78.172811,65.7],[26.251145,78.173066,65.8],[26.25113,78.173102,66.0],[26.251123,78.173075,67.1],[26.251132,78.173047,67.9],[26.251161,78.173035,67.0],[26.251162,78.172952,67.0],[26.251105,78.172909,69.4],[26.251004,78.172687,71.2],[26.250902,78.172603,74.4],[26.25095,78.172553,73.6],[26.250899,78.172571,71.7],[26.250897,78.172682,71.1],[26.250923,78.172784,70.4],[26.250923,78.172837,69.7],[26.250849,78.172949,68.4],[26.250757,78.173037,71.1],[26.250749,78.173128,73.6],[26.250717,78.173158,72.7],[26.25072,78.173149,71.0],[26.250756,78.173165,70.0],[26.250746,78.173165,68.1],[26.250774,78.173079,67.5],[26.250659,78.17314,67.0],[26.250602,78.173122,67.9],[26.250578,78.173114,67.9],[26.250488,78.173151,68.9],[26.250456,78.17319,68.4],[26.25047,78.173287,66.3],[26.250438,78.17333,66.7],[26.250435,78.173417,66.2],[26.250338,78.173419,66.1],[26.250269,78.173341,67.0],[26.250462,78.173508,67.2],[26.250444,78.173565,70.8],[26.250399,78.17358,72.7],[26.250343,78.173643,73.9],[26.250249,78.173713,73.9],[26.250158,78.17378,72.8],[26.250124,78.173805,75.0],[26.2501,78.17384,77.6],[26.25007,78.173844,79.5],[26.249998,78.173864,78.7],[26.249966,78.173885,77.5],[26.249925,78.173893,76.6],[26.249868,78.173893,77.1],[26.249774,78.173865,78.1],[26.249754,78.17387,78.1],[26.249722,78.173917,81.0],[26.249677,78.173948,81.2],[26.249654,78.173957,80.9],[26.24961,78.173969,78.8],[26.249524,78.174054,77.5],[26.249466,78.174106,77.1],[26.24945,78.17412,77.8],[26.249373,78.174147,77.8],[26.249324,78.174154,74.2],[26.249253,78.174244,72.2],[26.249234,78.174213,76.6],[26.249356,78.174162,78.3],[26.249385,78.174154,75.2],[26.249465,78.173966,75.1],[26.249445,78.173607,77.3],[26.249433,78.173566,77.3],[26.249338,78.173196,73.3],[26.249325,78.17312,75.2],[26.2493,78.17303,73.1],[26.249283,78.172981,72.3],[26.249233,78.172878,71.9],[26.249233,78.17282,73.5],[26.249223,78.172771,73.5],[26.249215,78.172771,70.6],[26.247981,78.17751,66.7],[26.247976,78.17764,65.0],[26.247978,78.177742,63.6],[26.247988,78.17778,63.5],[26.247994,78.177812,62.8],[26.247982,78.177822,63.1],[26.247977,78.177773,63.5],[26.24799,78.177439,62.6],[26.247989,78.177481,62.0],[26.247975,78.177541,62.0],[26.247993,78.177342,61.7],[26.247996,78.177295,60.8],[26.247992,78.177204,60.3],[26.248012,78.177169,60.1],[26.248097,78.177151,60.1],[26.248216,78.177157,59.6],[26.248312,78.177149,59.6],[26.248412,78.177169,59.7],[26.248514,78.177247,61.2],[26.248523,78.177297,61.7],[26.248472,78.177408,61.3],[26.248324,78.177562,62.1],[26.248292,78.177609,65.6],[26.248245,78.177732,56.7],[26.248139,78.177893,63.6],[26.24812,78.177906,65.2],[26.248109,78.178065,67.5],[26.248114,78.178199,66.5],[26.248209,78.178397,66.0],[26.248192,78.178585,65.5],[26.248212,78.17875,64.3],[26.248203,78.178819,63.7],[26.248054,78.179224,67.6],[26.248031,78.179288,68.5],[26.247988,78.179328,70.6],[26.247958,78.179269,71.0],[26.247971,78.179135,70.1],[26.248065,78.179026,67.2],[26.247647,78.174558,70.2],[26.247635,78.17443,68.5],[26.247552,78.173864,72.3],[26.247541,78.173798,73.0],[26.247562,78.173616,76.2],[26.247566,78.17358,76.0],[26.247574,78.173541,74.8],[26.247587,78.173504,72.0],[26.247647,78.17297,81.9],[26.24766,78.172949,81.4],[26.247716,78.172925,80.6],[26.247751,78.172873,79.5],[26.247774,78.172829,78.3],[26.247806,78.172740,73.8],[26.247837,78.172699,73.0],[26.247847,78.172615,71.1],[26.247867,78.172559,69.4],[26.247905,78.172517,67.7],[26.247984,78.172448,66.1],[26.248199,78.172228,62.2],[26.248272,78.172149,62.3],[26.248331,78.172112,62.6],[26.248604,78.171934,63.8],[26.248749,78.171871,65.6],[26.248945,78.171822,67.2],[26.249076,78.171717,66.8],[26.249276,78.171686,68.3],[26.249324,78.171666,69.5],[26.249477,78.171664,71.0],[26.249647,78.171597,70.5],[26.249783,78.171559,68.8],[26.249915,78.171595,67.8],[26.250043,78.171506,68.1],[26.250169,78.171337,65.2],[26.246868,78.177555,65.8],[26.246874,78.177553,66.4],[26.246941,78.177582,64.5],[26.247004,78.177573,63.5],[26.247055,78.177481,61.3],[26.247065,78.177262,59.3],[26.247081,78.177180,59.7],[26.247277,78.177088,62.0],[26.250016,78.171222,79.5],[26.249982,78.171119,77.8],[26.249846,78.170957,76.2],[26.249832,78.170694,71.1],[26.24989,78.170472,69.8],[26.249978,78.170362,71.5],[26.250049,78.170367,71.1],[26.250151,78.170282,71.0]];
+const AQI_CSV={avg:60.3,max:283};
 
-// AQI CSV data (Indore) — hourly averages for heatmap seeding  
-const AQI_CSV = {avg:60.3, max:283, hourly:{18:67.7, 19:53.5, 21:85.2, 22:57.2}};
-const AQI_CSV_LAT = 22.7179, AQI_CSV_LON = 75.8333;
-
-// ═══════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════
-const DEFAULT = [22.7196, 75.8577]; // Indore center
-let map, userLat, userLon, analyser;
+// ═══════════ STATE ═══════════
+let map, userLat, userLon;
 let fromLat, fromLon, fromName, toLat, toLon, toName;
-let travelMode = 'foot';
-let navOn = false, proxDismissed = false;
-let rLayers = [], hLayers = {}, routeData = [];
-let env = {pm25:null,pm10:null,no2:null,aqi:null,tree:null,grass:null,uv:null,noise:68};
-let currentLocationName = 'Indore, India';
-let customLocations = JSON.parse(localStorage.getItem('ecoroute_locs')||'[]');
-let locMarkers = [], pinsLayerVisible = true;
-let pinDropMode = false;
-let healthProfile = 'none';
-let conditions = new Set();
-let catFilter = 'all';
+let travelMode='foot', navOn=false;
+let rLayers=[], hLayers={}, routeData=[];
+let env={aqi:null,pm25:null,grass:null,tree:null,uv:null,noise:68};
+let currentLocName='Location';
+let customLocations=JSON.parse(localStorage.getItem('eco_locs')||'[]');
+let locMarkers=[], pinsVisible=true;
+let pinDropMode=false;
+let healthProfile='none', conditions=new Set(), catFilter='all';
+let sheetState='peek'; // peek | half | full
+let startY=0, startOffset=0, isDragging=false;
 
-// ═══════════════════════════════════════
-// MAP INIT
-// ═══════════════════════════════════════
+const SHEET_OFFSETS={peek:'calc(100% - 260px)',half:'calc(100% - 55dvh)',full:'0px'};
+
+// ═══════════ SHEET DRAG ═══════════
+(function(){
+  const sheet=document.getElementById('sheet');
+  const handle=document.getElementById('sheetHandle');
+  const STATES=['peek','half','full'];
+  let startY=0,startT=0,curOffset=0;
+
+  function getOffset(){return parseFloat(sheet.style.transform?.replace('translateY(',''))||0;}
+
+  handle.addEventListener('touchstart',e=>{
+    startY=e.touches[0].clientY;
+    startT=Date.now();
+    sheet.style.transition='none';
+  },{passive:true});
+  handle.addEventListener('touchmove',e=>{
+    const dy=e.touches[0].clientY-startY;
+    const h=window.innerHeight;
+    const base=sheetState==='peek'?h-260:sheetState==='half'?h*0.45:0;
+    const newY=Math.max(0,Math.min(h-60,base+dy));
+    sheet.style.transform=`translateY(${newY}px)`;
+  },{passive:true});
+  handle.addEventListener('touchend',e=>{
+    sheet.style.transition='';
+    const dy=e.changedTouches[0].clientY-startY;
+    const dt=Date.now()-startT;
+    if(Math.abs(dy)<10) return;
+    if(dy<-30){
+      sheetState=sheetState==='peek'?'half':sheetState==='half'?'full':'full';
+    } else if(dy>30){
+      sheetState=sheetState==='full'?'half':sheetState==='half'?'peek':'peek';
+    }
+    applySheet();
+  },{passive:true});
+})();
+
+function applySheet(){
+  const sheet=document.getElementById('sheet');
+  sheet.className='bottom-sheet sheet-'+sheetState;
+}
+
+function expandSheet(){
+  sheetState=sheetState==='peek'?'half':'full';
+  applySheet();
+}
+
+// ═══════════ MAP ═══════════
 function initMap(){
-  map = L.map('map', {zoomControl:false, attributionControl:false}).setView(DEFAULT, 13);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom:19}).addTo(map);
+  const DEFAULT=[22.7196,75.8577];
+  map=L.map('map',{zoomControl:false,attributionControl:false}).setView(DEFAULT,13);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(map);
   L.control.zoom({position:'bottomright'}).addTo(map);
 
-  // User location
   if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(pos=>{
-      userLat = pos.coords.latitude; userLon = pos.coords.longitude;
-      currentLocationName = 'Your Location';
-      map.setView([userLat, userLon], 14);
-      L.circleMarker([userLat, userLon], {radius:8, color:'#00C896', fillColor:'#00C896', fillOpacity:0.8, weight:2}).addTo(map).bindPopup('📍 You are here');
-      fetchEnv(userLat, userLon);
-    }, ()=>{ fetchEnv(...DEFAULT); });
+    navigator.geolocation.getCurrentPosition(p=>{
+      userLat=p.coords.latitude; userLon=p.coords.longitude;
+      currentLocName='Your Location';
+      map.setView([userLat,userLon],14);
+      L.circleMarker([userLat,userLon],{radius:8,color:getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),fillColor:'#006a2b',fillOpacity:.9,weight:3,fillOpacity:0.8}).addTo(map).bindPopup('📍 You are here');
+      fetchEnv(userLat,userLon);
+    },()=>fetchEnv(...DEFAULT));
   } else { fetchEnv(...DEFAULT); }
 
-  // Map click for pin drop
-  map.on('click', e=>{
-    document.getElementById('mainSuggest').classList.remove('show');
-    document.getElementById('fromSuggest').classList.remove('show');
-    document.getElementById('toSuggest').classList.remove('show');
+  // Build noise heatmap from CSV data
+  buildNoiseHeat();
+  renderLocMarkers();
+
+  map.on('click',e=>{
+    closeSuggests();
     if(pinDropMode){
-      const name = document.getElementById('newLocName').value.trim() || 'Pin Location';
-      const cat = document.getElementById('newLocCat').value;
-      addCustomLocation(name, '', e.latlng.lat, e.latlng.lng, cat);
+      const n=document.getElementById('newLocName').value.trim()||'Pin';
+      const cat=document.getElementById('newLocCat').value;
+      addCustomLocation(n,'',e.latlng.lat,e.latlng.lng,cat);
       togglePinMode();
     }
   });
-
-  // Build noise heatmap from real CSV data
-  buildNoiseHeatFromCSV();
-  renderLocMarkers();
-  renderAQIChart();
 }
 
-// ═══════════════════════════════════════
-// NOISE HEATMAP FROM REAL CSV DATA
-// ═══════════════════════════════════════
-function buildNoiseHeatFromCSV(){
-  // Normalize decibel data to 0-1 scale (56-82 dB range)
-  const minDb=56, maxDb=82;
-  const pts = DECIBEL_DATA.map(r=>[r[0],r[1], (r[2]-minDb)/(maxDb-minDb)]);
-  hLayers.noise = L.heatLayer(pts, {
-    radius:25, blur:20, maxZoom:18, minOpacity:0.35, max:1.0,
-    gradient:{0.0:'rgba(59,130,246,0)',0.25:'rgba(59,130,246,0.7)',0.55:'rgba(139,92,246,0.85)',0.8:'rgba(236,72,153,0.95)',1.0:'rgba(239,68,68,1.0)'}
-  });
-  // Show noise as first layer on campus area
-  document.getElementById('ndsp').textContent = '68';
+function buildNoiseHeat(){
+  const mn=56,mx=82;
+  const pts=DECIBEL_DATA.map(r=>[r[0],r[1],(r[2]-mn)/(mx-mn)]);
+  hLayers.noise=L.heatLayer(pts,{radius:22,blur:16,maxZoom:18,minOpacity:0.35,max:1,gradient:{0:'rgba(118,86,0,0)',0.3:'rgba(255,202,83,0.7)',0.6:'rgba(180,26,20,0.85)',1:'rgba(176,37,0,1)'}});
 }
 
-// ═══════════════════════════════════════
-// GEOCODING
-// ═══════════════════════════════════════
-async function geocode(q, near=null){
-  let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&accept-language=en`;
-  if(near) url += `&viewbox=${near[1]-.5},${near[0]+.5},${near[1]+.5},${near[0]-.5}&bounded=1`;
-  try{
-    const r = await fetch(url,{headers:{'Accept-Language':'en'}});
-    return await r.json();
-  }catch(e){ return []; }
+// ═══════════ GEOCODING ═══════════
+async function geocode(q){
+  try{const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`,{headers:{'Accept-Language':'en'}});return await r.json();}
+  catch(e){return[];}
 }
 
-async function reverseGeocode(lat, lon){
-  try{
-    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,{headers:{'Accept-Language':'en'}});
-    const d = await r.json();
-    return d.display_name ? d.display_name.split(',').slice(0,2).join(', ') : 'Your Location';
-  }catch(e){ return 'Your Location'; }
-}
-
-// ═══════════════════════════════════════
-// SEARCH
-// ═══════════════════════════════════════
-function renderSuggest(id, results, onSelect){
+function renderSuggest(id,results,onSelect){
   const box=document.getElementById(id);
   if(!results.length){box.classList.remove('show');return;}
-  box.innerHTML=results.map(r=>`<div class="sug-item" onclick="(${onSelect.toString()})(${r.lat},${r.lon},'${r.display_name.replace(/'/g,'`')}')"><span class="material-symbols-outlined">location_on</span>${r.display_name.split(',').slice(0,3).join(', ')}</div>`).join('');
+  box.innerHTML=results.slice(0,4).map(r=>`<div class="sug-item" onclick="${onSelect}(${r.lat},${r.lon},'${r.display_name.replace(/'/g,'`').slice(0,60)}')"><span class="material-symbols-outlined">location_on</span>${r.display_name.split(',').slice(0,3).join(', ')}</div>`).join('');
   box.classList.add('show');
 }
 
-let mainTimer=null;
-function onMainSearch(val){
-  clearTimeout(mainTimer);
-  if(val.length<3){document.getElementById('mainSuggest').classList.remove('show');return;}
-  mainTimer=setTimeout(async()=>{
-    const res=await geocode(val);
-    renderSuggest('mainSuggest',res,function(lat,lon,name){
-      document.getElementById('mainSearch').value=name;
-      document.getElementById('mainSuggest').classList.remove('show');
-      flyToAndFetch(lat,lon,name);
-    });
+let mainT=null;
+function onMainSearch(v){
+  clearTimeout(mainT);
+  if(v.length<3){document.getElementById('mainSuggest').classList.remove('show');return;}
+  mainT=setTimeout(async()=>{
+    const res=await geocode(v);
+    const box=document.getElementById('mainSuggest');
+    if(!res.length){box.classList.remove('show');return;}
+    box.innerHTML=res.slice(0,4).map(r=>`<div class="sug-item" onclick="flyTo(${r.lat},${r.lon},'${r.display_name.replace(/'/g,'`').slice(0,60)}')"><span class="material-symbols-outlined">location_on</span>${r.display_name.split(',').slice(0,3).join(', ')}</div>`).join('');
+    box.classList.add('show');
   },350);
 }
-
 async function doMainSearch(){
-  const q=document.getElementById('mainSearch').value.trim();
-  if(!q)return;
-  const res=await geocode(q);
-  if(!res.length){toast('Location not found','warning');return;}
-  const r=res[0];
-  document.getElementById('mainSuggest').classList.remove('show');
-  flyToAndFetch(parseFloat(r.lat),parseFloat(r.lon),r.display_name.split(',').slice(0,2).join(', '));
+  const q=document.getElementById('mainSearch').value.trim();if(!q)return;
+  const res=await geocode(q);if(!res.length){toast('Not found','warning');return;}
+  flyTo(res[0].lat,res[0].lon,res[0].display_name);
 }
-
-async function flyToAndFetch(lat,lon,name){
-  currentLocationName=name;
+function flyTo(lat,lon,name){
+  currentLocName=name.split(',')[0];
+  document.getElementById('aqiLoc').textContent=currentLocName;
   map.flyTo([lat,lon],14,{duration:1.2});
-  document.getElementById('aqiBadgeLoc').textContent=name.split(',')[0];
-  toast(`📍 ${name.split(',')[0]}`,'success');
-  await fetchEnv(lat,lon);
+  document.getElementById('mainSuggest').classList.remove('show');
+  fetchEnv(parseFloat(lat),parseFloat(lon));
 }
 
-// ═══════════════════════════════════════
-// FROM/TO ROUTE SEARCH
-// ═══════════════════════════════════════
-let fromTimer=null,toTimer=null;
-function onFromSearch(val){
-  clearTimeout(fromTimer);
-  if(val.length<3){document.getElementById('fromSuggest').classList.remove('show');return;}
-  fromTimer=setTimeout(async()=>{
-    const res=await geocode(val);
-    const box=document.getElementById('fromSuggest');
-    if(!res.length){box.classList.remove('show');return;}
-    box.innerHTML=res.slice(0,4).map(r=>`<div class="sug-item" onclick="setFrom(${r.lat},${r.lon},'${r.display_name.replace(/'/g,'`').slice(0,50)}')"><span class="material-symbols-outlined">location_on</span>${r.display_name.split(',').slice(0,2).join(', ')}</div>`).join('');
-    box.classList.add('show');
-  },350);
+let fromT=null,toT=null;
+function onFromSearch(v){
+  clearTimeout(fromT);
+  if(v.length<3){document.getElementById('fromSuggest').classList.remove('show');return;}
+  fromT=setTimeout(async()=>{renderSuggest('fromSuggest',await geocode(v),'setFrom');},350);
 }
-function onToSearch(val){
-  clearTimeout(toTimer);
-  if(val.length<3){document.getElementById('toSuggest').classList.remove('show');return;}
-  toTimer=setTimeout(async()=>{
-    const res=await geocode(val);
-    const box=document.getElementById('toSuggest');
-    if(!res.length){box.classList.remove('show');return;}
-    box.innerHTML=res.slice(0,4).map(r=>`<div class="sug-item" onclick="setTo(${r.lat},${r.lon},'${r.display_name.replace(/'/g,'`').slice(0,50)}')"><span class="material-symbols-outlined">flag</span>${r.display_name.split(',').slice(0,2).join(', ')}</div>`).join('');
-    box.classList.add('show');
-  },350);
+function onToSearch(v){
+  clearTimeout(toT);
+  if(v.length<3){document.getElementById('toSuggest').classList.remove('show');return;}
+  toT=setTimeout(async()=>{renderSuggest('toSuggest',await geocode(v),'setTo');},350);
 }
 function setFrom(lat,lon,name){fromLat=parseFloat(lat);fromLon=parseFloat(lon);fromName=name;document.getElementById('fromInput').value=name.slice(0,50);document.getElementById('fromSuggest').classList.remove('show');document.getElementById('fromRow').classList.remove('focus-in');}
 function setTo(lat,lon,name){toLat=parseFloat(lat);toLon=parseFloat(lon);toName=name;document.getElementById('toInput').value=name.slice(0,50);document.getElementById('toSuggest').classList.remove('show');document.getElementById('toRow').classList.remove('focus-in');}
 function blurFrom(){setTimeout(()=>{document.getElementById('fromSuggest').classList.remove('show');document.getElementById('fromRow').classList.remove('focus-in');},200);}
 function blurTo(){setTimeout(()=>{document.getElementById('toSuggest').classList.remove('show');document.getElementById('toRow').classList.remove('focus-in');},200);}
+function closeSuggests(){['mainSuggest','fromSuggest','toSuggest'].forEach(id=>document.getElementById(id).classList.remove('show'));}
 
-// ═══════════════════════════════════════
-// ROUTING — POLLUTION-AWARE
-// ═══════════════════════════════════════
+// ═══════════ ROUTING ═══════════
 const PROFILES={walk:'foot',bike:'bike',bus:'driving',car:'driving'};
 
-async function getOSRMRoute(sLat,sLon,eLat,eLon,profile='foot'){
-  const url=`https://router.project-osrm.org/route/v1/${profile}/${sLon},${sLat};${eLon},${eLat}?overview=full&geometries=geojson&alternatives=true&steps=false`;
-  const r=await fetch(url);
-  const d=await r.json();
-  if(d.code!=='Ok')throw new Error('No route');
-  return d.routes;
-}
-
-function decodeRoute(route){
-  return route.geometry.coordinates.map(c=>[c[1],c[0]]);
-}
-
-// Score a route path against pollution data
-function scorePath(coords){
-  const aqi = env.aqi || 60;
-  const grass = env.grass || 2;
-  const noiseNearRoute = estimateNoiseForPath(coords);
-  
-  // Base pollution penalty
-  let aqiScore = Math.max(0, 100 - aqi * 0.5);
-  let pollenScore = Math.max(0, 100 - grass * 15);
-  let noiseScore = Math.max(0, 100 - (noiseNearRoute - 50) * 2.5);
-  
-  // Health modifier — stricter thresholds for sensitive profiles
-  let healthMult = 1.0;
-  if(healthProfile==='mild') healthMult = 1.2;
-  else if(healthProfile==='moderate') healthMult = 1.5;
-  else if(healthProfile==='severe') healthMult = 2.0;
-  
-  // Condition-specific penalties
-  if(conditions.has('asthma')) aqiScore = Math.max(0, aqiScore - 10 * (healthMult-1));
-  if(conditions.has('allergy')) pollenScore = Math.max(0, pollenScore - 15 * (healthMult-1));
-  
-  const avoidAqi = document.getElementById('tAqi').checked;
-  const avoidNoise = document.getElementById('tNoise').checked;
-  const avoidPollen = document.getElementById('tPollen').checked;
-  
-  let w = {aqi:0.4, noise:0.3, pollen:0.3};
-  if(!avoidNoise) w.aqi+=w.noise, w.noise=0;
-  if(!avoidPollen) w.aqi+=w.pollen, w.pollen=0;
-  
-  return Math.round(aqiScore*w.aqi + noiseScore*w.noise + pollenScore*w.pollen);
-}
-
-function estimateNoiseForPath(coords){
-  if(!coords.length) return 68;
-  // Check proximity to decibel measurement points
-  let totalNoise = 0, count = 0;
-  const step = Math.max(1, Math.floor(coords.length/10));
-  for(let i=0; i<coords.length; i+=step){
-    const [lat,lon] = coords[i];
-    let minDist = 9999, nearestDb = 68;
-    for(const dp of DECIBEL_DATA.slice(0,100)){
-      const d = Math.hypot(lat-dp[0], lon-dp[1]);
-      if(d < minDist){ minDist=d; nearestDb=dp[2]; }
-    }
-    if(minDist < 0.05) { totalNoise+=nearestDb; count++; }
-  }
-  return count>0 ? totalNoise/count : 68;
-}
-
-// Generate a "detoured" path that avoids high-noise zones
-function detouredPath(coords, detourFactor){
-  return coords.map((pt,i)=>{
-    const perp = i < coords.length-1 ? 
-      [pt[0] + (coords[i+1][1]-pt[1])*detourFactor, pt[1] - (coords[i+1][0]-pt[0])*detourFactor] :
-      [pt[0]+detourFactor*0.001, pt[1]+detourFactor*0.001];
-    return perp;
-  });
-}
-
 async function findRoutes(){
-  let fLat=fromLat, fLon=fromLon;
-  if(!fLat && userLat){ fLat=userLat; fLon=userLon; document.getElementById('fromInput').value='My Location'; }
-  let tLat=toLat, tLon=toLon;
+  let fLat=fromLat,fLon=fromLon;
+  if(!fLat&&userLat){fLat=userLat;fLon=userLon;document.getElementById('fromInput').value='My Location';}
+  let tLat=toLat,tLon=toLon;
   if(!tLat){
     const tv=document.getElementById('toInput').value.trim();
-    if(!tv){toast('Please enter a destination','warning');return;}
+    if(!tv){toast('Enter a destination','warning');return;}
     const res=await geocode(tv);
     if(!res.length){toast('Destination not found','warning');return;}
-    tLat=parseFloat(res[0].lat); tLon=parseFloat(res[0].lon);
+    tLat=parseFloat(res[0].lat);tLon=parseFloat(res[0].lon);
     toName=res[0].display_name.split(',').slice(0,2).join(', ');
     setTo(tLat,tLon,toName);
   }
-  if(!fLat||!tLat){toast('Set both start and destination','warning');return;}
+  if(!fLat||!tLat){toast('Set start and destination','warning');return;}
 
-  document.getElementById('rl').innerHTML='<div class="route-ld"><div class="sp"></div>Calculating pollution-aware routes…</div>';
-  toast('🔍 Finding eco routes…','info');
+  document.getElementById('routeList').innerHTML='<div class="loading-row"><div class="spin"></div>Calculating routes…</div>';
+  sheetState='half'; applySheet();
+  toast('Finding eco routes…','info');
 
   try{
-    const profile=PROFILES[travelMode]||'foot';
-    const osrmRoutes=await getOSRMRoute(fLat,fLon,tLat,tLon,profile);
+    const url=`https://router.project-osrm.org/route/v1/${PROFILES[travelMode]||'foot'}/${fLon},${fLat};${tLon},${tLat}?overview=full&geometries=geojson&alternatives=true`;
+    const d=await(await fetch(url)).json();
+    if(d.code!=='Ok')throw new Error();
 
     rLayers.forEach(l=>map.removeLayer(l));
-    rLayers=[]; routeData=[];
+    rLayers=[];routeData=[];
 
-    const aqi = env.aqi || 60;
-    const avoidAqi = document.getElementById('tAqi').checked;
-    const avoidNoise = document.getElementById('tNoise').checked;
+    const base=d.routes[0];
+    const alt=d.routes[1];
+    const bCoords=decode(base),bDist=(base.distance/1000),bDur=Math.round(base.duration/60);
 
-    // Build multiple route variants:
-    // Route 0: Fastest (OSRM default)
-    // Route 1: Low Pollution (slightly longer but avoids hotspots — simulated detour)
-    // Route 2: Low Noise (avoids noisy roads based on decibel data)
-    // Route 3: Best Overall (balanced eco score)
+    const variants=[
+      {label:'Fastest Route',icon:'bolt',type:'fast',color:'#2563eb',coords:bCoords,dist:bDist,dur:bDur},
+      {label:'Low Pollution',icon:'air',type:'lpoll',color:'#7c3aed',coords:alt?decode(alt):detour(bCoords,.002),dist:bDist*1.08,dur:bDur+Math.round(bDur*.12)},
+      {label:'Quiet Route',icon:'volume_off',type:'quiet',color:'#765600',coords:detour(bCoords,-.003),dist:bDist*1.05,dur:bDur+Math.round(bDur*.08)},
+      {label:'Best Eco Route',icon:'eco',type:'eco',color:'#006a2b',coords:alt?detour(decode(alt),.001):detour(bCoords,.0015),dist:bDist*1.12,dur:bDur+Math.round(bDur*.15)},
+    ];
 
-    const baseCoords = decodeRoute(osrmRoutes[0]);
-    const altCoords = osrmRoutes[1] ? decodeRoute(osrmRoutes[1]) : null;
-    const baseDist = (osrmRoutes[0].distance/1000);
-    const baseDur = Math.round(osrmRoutes[0].duration/60);
+    variants.forEach(v=>{ v.score=scoreRoute(v.coords); v.dist=typeof v.dist==='number'?v.dist.toFixed(1):v.dist; });
 
-    // Generate route variants
-    const variants = [];
-
-    // 1. FASTEST (OSRM fastest)
-    variants.push({
-      coords: baseCoords,
-      dist: baseDist.toFixed(1),
-      dur: baseDur,
-      type: 'fast',
-      label: 'Fastest Route',
-      icon: 'bolt',
-      color: '#3B82F6',
-      weight: 4
-    });
-
-    // 2. LOW POLLUTION — simulate by using alt route or slight detour away from busy areas
-    const pollutionCoords = altCoords || detouredPath(baseCoords, 0.002);
-    const extraTimePollution = Math.round(baseDur * 0.12);
-    variants.push({
-      coords: pollutionCoords,
-      dist: (baseDist * 1.08).toFixed(1),
-      dur: baseDur + extraTimePollution,
-      type: 'low-pollution',
-      label: 'Low Pollution',
-      icon: 'air',
-      color: '#A78BFA',
-      weight: 4
-    });
-
-    // 3. LOW NOISE — detour away from high-decibel zones
-    const noiseCoords = detouredPath(baseCoords, avoidNoise ? -0.003 : 0);
-    const extraTimeNoise = Math.round(baseDur * 0.08);
-    variants.push({
-      coords: noiseCoords,
-      dist: (baseDist * 1.05).toFixed(1),
-      dur: baseDur + extraTimeNoise,
-      type: 'low-noise',
-      label: 'Quiet Route',
-      icon: 'volume_off',
-      color: '#EC4899',
-      weight: 4
-    });
-
-    // 4. ECO BEST — balanced, health-adjusted
-    const ecoCoords = altCoords ? detouredPath(pollutionCoords, 0.001) : detouredPath(baseCoords, 0.0015);
-    const extraTimeEco = Math.round(baseDur * 0.15);
-    variants.push({
-      coords: ecoCoords,
-      dist: (baseDist * 1.12).toFixed(1),
-      dur: baseDur + extraTimeEco,
-      type: 'eco',
-      label: 'Best Eco Route',
-      icon: 'eco',
-      color: '#00C896',
-      weight: 5
-    });
-
-    // Score all routes
-    variants.forEach(v=>{ v.score = scorePath(v.coords); });
-
-    // Sort: fastest stays fastest, others sorted by pollution score descending
-    const fastest = variants[0];
-    const others = variants.slice(1).sort((a,b)=>b.score-a.score);
-    const ordered = [fastest, ...others];
-
-    // Draw routes (in reverse so eco is on top)
-    [...ordered].reverse().forEach((v,ri)=>{
-      const idx = ordered.length-1-ri;
-      const pl = L.polyline(v.coords, {
-        color: v.color,
-        weight: idx===ordered.length-1 ? v.weight : 3,
-        opacity: idx===ordered.length-1 ? 0.95 : 0.4,
-        dashArray: v.type==='fast' ? '10,6' : null
-      }).addTo(map);
-      pl.bindTooltip(`${v.label} · ${v.dist}km · ${v.dur}min`, {direction:'top'});
+    // Draw routes
+    [...variants].reverse().forEach((v,ri)=>{
+      const idx=variants.length-1-ri;
+      const pl=L.polyline(v.coords,{color:v.color,weight:idx===variants.length-1?5:3,opacity:idx===variants.length-1?.95:.38,dashArray:v.type==='fast'&&idx!==variants.length-1?'8,5':null}).addTo(map);
+      pl.bindTooltip(`${v.label} · ${v.dist}km · ${v.dur}min`,{direction:'top'});
       rLayers.push(pl);
-      routeData.push({...v, idx});
+      routeData.push(v);
     });
 
-    if(rLayers.length) map.fitBounds(rLayers[ordered.length-1].getBounds(),{padding:[50,50]});
-
-    addEndpointMarker(fLat,fLon,'#00C896',fromName||'Start');
-    addEndpointMarker(tLat,tLon,'#EF4444',toName||'Destination');
-
+    if(rLayers.length) map.fitBounds(rLayers[variants.length-1].getBounds(),{padding:[60,60]});
+    addPin(fLat,fLon,'#006a2b',fromName||'Start');
+    addPin(tLat,tLon,'#b02500',toName||'Destination');
     await fetchEnv(tLat,tLon);
-    renderRouteCards(ordered);
-    toast(`✅ ${routeData.length} routes · Eco route highlighted`,'success');
-
+    renderRouteCards();
+    sheetState='half'; applySheet();
+    toast(`✅ ${variants.length} routes found`,'success');
   }catch(e){
-    console.error(e);
-    document.getElementById('rl').innerHTML='<div class="no-route">⚠️ Routes not found. Check connection.</div>';
+    document.getElementById('routeList').innerHTML='<div class="no-routes">⚠️ Routes not found. Check connection.</div>';
     toast('Route finding failed','danger');
   }
 }
 
-function addEndpointMarker(lat,lon,color,label){
-  const icon=L.divIcon({html:`<div style="background:${color};width:12px;height:12px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,0.6)"></div>`,iconSize:[12,12],iconAnchor:[6,6],className:''});
+function decode(route){return route.geometry.coordinates.map(c=>[c[1],c[0]]);}
+function detour(coords,f){return coords.map((p,i)=>i<coords.length-1?[p[0]+(coords[i+1][1]-p[1])*f,p[1]-(coords[i+1][0]-p[0])*f]:[p[0]+f*.001,p[1]+f*.001]);}
+
+function scoreRoute(coords){
+  const aqi=env.aqi??AQI_CSV.avg;
+  const grass=env.grass??2;
+  const noise=env.noise??68;
+  let a=Math.max(0,100-aqi*.5), p=Math.max(0,100-grass*15), n=Math.max(0,100-(noise-50)*2.2);
+  const hm=healthProfile==='none'?1:healthProfile==='mild'?.88:healthProfile==='moderate'?.76:.62;
+  return Math.round(Math.max(10,Math.min(100,(a*.4+p*.3+n*.3)*hm)));
+}
+
+function addPin(lat,lon,color,label){
+  const icon=L.divIcon({html:`<div style="background:${color};width:13px;height:13px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.4)"></div>`,iconSize:[13,13],iconAnchor:[6,6],className:''});
   L.marker([lat,lon],{icon}).addTo(map).bindPopup(`<b>${label}</b>`);
 }
 
-function renderRouteCards(ordered){
-  const aqi=env.aqi||0, grass=env.grass||0;
-  const avoidPollen=document.getElementById('tPollen').checked;
-  const avoidAqi=document.getElementById('tAqi').checked;
-  const avoidNoise=document.getElementById('tNoise').checked;
-
-  document.getElementById('rl').innerHTML = ordered.map((r,i)=>{
+function renderRouteCards(){
+  const aqi=env.aqi??AQI_CSV.avg;
+  const html=routeData.map((r,i)=>{
+    const isBest=r.type==='eco';
+    const sc=r.score;
+    const scColor=sc>=80?'var(--primary)':sc>=60?'var(--secondary)':'var(--tertiary)';
     let tags='';
-    if(r.type==='eco') tags+=`<span class="tg tg-g">Best Eco</span>`;
-    if(r.type==='fast') tags+=`<span class="tg tg-b">Fastest</span>`;
-    if(r.type==='low-pollution') tags+=`<span class="tg tg-p">Low Pollution</span>`;
-    if(r.type==='low-noise') tags+=`<span class="tg tg-pk">Quiet</span>`;
-    if(healthProfile==='moderate'||healthProfile==='severe') tags+=`<span class="tg tg-g">Health-Adjusted</span>`;
-    if(aqi>100&&r.type!=='fast') tags+=`<span class="tg tg-g">AQI-Safe</span>`;
-    if(aqi>150&&r.type==='fast') tags+=`<span class="tg tg-r">AQI Zone</span>`;
-    const isOn = r.type==='eco' ? 'on' : '';
-    return `
-    <div class="rc ${r.type} ${isOn}" onclick="selRoute(this,${i})" style="border-left:3px solid ${r.color}">
-      <div class="rr">
-        <div class="ri" style="border-color:${r.color}20"><span class="material-symbols-outlined" style="color:${r.color}">${r.icon}</span></div>
-        <div class="rinf"><div class="rnm">${r.label}</div><div class="rmt">${r.dur} min · ${r.dist} km</div></div>
-        <div class="rsc"><div class="rpts" style="color:${r.score>=80?'var(--safe)':r.score>=60?'var(--mod)':'var(--haz)'}">${r.score}</div><div class="rpl">Eco Score</div></div>
+    if(r.type==='eco') tags+='<span class="rc-tag tag-g">Best Eco</span>';
+    if(r.type==='fast') tags+='<span class="rc-tag tag-b">Fastest</span>';
+    if(r.type==='lpoll') tags+='<span class="rc-tag tag-p">Low Pollution</span>';
+    if(r.type==='quiet') tags+='<span class="rc-tag tag-y">Quiet Roads</span>';
+    if(aqi>100&&r.type!=='fast') tags+='<span class="rc-tag tag-g">AQI Safe</span>';
+    if(aqi>100&&r.type==='fast') tags+='<span class="rc-tag tag-r">AQI Zone</span>';
+    if(healthProfile!=='none'&&r.type!=='fast') tags+='<span class="rc-tag tag-g">Health-Tuned</span>';
+    const barW=Math.min(100,sc)+'%';
+    return `<div class="route-card ${r.type}${isBest?' best':''}" onclick="selRoute(this,${i})" id="rc-${i}">
+      ${isBest?`<div class="rc-badge"><span class="material-symbols-outlined">verified</span>Best Choice</div>`:''}
+      <div class="rc-top" style="${isBest?'margin-top:14px':''}">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="rc-icon"><span class="material-symbols-outlined">${r.icon}</span></div>
+          <div><div class="rc-name">${r.label}</div><div class="rc-meta">${r.dur} min · ${r.dist} km</div></div>
+        </div>
+        <div class="rc-score"><div class="rc-score-num" style="color:${scColor}">${sc}</div><div class="rc-score-lbl">Eco Score</div></div>
       </div>
-      <div class="rtgs">${tags}</div>
+      ${isBest?`<div class="rc-stats">
+        <div class="rc-stat"><span class="material-symbols-outlined" style="color:var(--primary)">air</span><div class="rc-stat-lbl">AQI ${Math.round(aqi)}</div></div>
+        <div class="rc-stat"><span class="material-symbols-outlined" style="color:var(--secondary)">volume_down</span><div class="rc-stat-lbl">${Math.round(env.noise??68)} dB</div></div>
+        <div class="rc-stat"><span class="material-symbols-outlined" style="color:var(--primary)">eco</span><div class="rc-stat-lbl">${env.grass<=1?'Low':env.grass<=3?'Mod':'Hi'} Pollen</div></div>
+      </div>`:`<div class="rc-bar"><div class="rc-bar-fill" style="width:${barW};background:${scColor}"></div></div>`}
+      <div class="rc-tags">${tags}</div>
     </div>`;
   }).join('');
-
-  // Select eco route by default
-  const ecoEl = document.querySelector('.rc.eco');
-  if(ecoEl) ecoEl.classList.add('on');
+  document.getElementById('routeList').innerHTML=html;
 }
 
 function selRoute(el,idx){
-  document.querySelectorAll('.rc').forEach(c=>c.classList.remove('on'));
+  document.querySelectorAll('.route-card').forEach(c=>c.classList.remove('on'));
   el.classList.add('on');
-  rLayers.forEach((l,i)=>{
-    l.setStyle({weight:i===idx?5:3,opacity:i===idx?0.95:0.35,dashArray:routeData[i]?.type==='fast'&&i!==idx?'10,6':i===idx?null:'10,6'});
-  });
-  if(rLayers[idx]) map.fitBounds(rLayers[idx].getBounds(),{padding:[50,50]});
-  const s=routeData[idx]?.score||72;
-  updScore(s,(s/100*3.2).toFixed(1));
-  toast(`${routeData[idx]?.label||'Route'} selected`,'success');
+  rLayers.forEach((l,i)=>{l.setStyle({weight:i===idx?5:3,opacity:i===idx?.95:.35,dashArray:routeData[i]?.type==='fast'&&i!==idx?'8,5':null});});
+  if(rLayers[idx])map.fitBounds(rLayers[idx].getBounds(),{padding:[60,60]});
+  updScore(routeData[idx]?.score||72);
+  toast(`${routeData[idx]?.label} selected`,'success');
 }
 
 function reRank(){
-  if(routeData.length>0){
-    routeData.forEach(r=>{ r.score=scorePath(r.coords); });
-    renderRouteCards(routeData);
-  }
-  updateHealthHint();
+  if(routeData.length>0){routeData.forEach(r=>{r.score=scoreRoute(r.coords);});renderRouteCards();}
 }
 
-// ═══════════════════════════════════════
-// HEALTH PROFILE
-// ═══════════════════════════════════════
-const HEALTH_DESCS = {
-  none: 'No special routing adjustments. Standard eco routes.',
-  mild: 'Mild sensitivity: Routes avoid AQI > 75. Prefer greener paths.',
-  moderate: 'Moderate: Routes avoid AQI > 50. Pollen and noise also considered.',
-  severe: 'Severe: Only routes with AQI < 40. Strong avoidance of all pollution.'
-};
-
-function setHealth(level, btn){
-  healthProfile = level;
-  document.querySelectorAll('.hp-btn').forEach(b=>b.classList.remove('on','on-m','on-g'));
-  const cls = level==='none'?'on-g':level==='mild'?'on-m':'on';
-  btn.classList.add(cls);
-  document.getElementById('healthDesc').textContent = HEALTH_DESCS[level];
-  document.getElementById('healthDesc').classList.add('show');
-  toast(`Health profile: ${level.charAt(0).toUpperCase()+level.slice(1)}`,'info');
-  reRank();
-}
-
-function toggleCondition(cond, btn){
-  if(conditions.has(cond)){ conditions.delete(cond); btn.classList.remove('on'); }
-  else { conditions.add(cond); btn.classList.add('on'); }
-  if(cond==='allergy') document.getElementById('tPollen').checked=conditions.has('allergy');
-  if(cond==='asthma') document.getElementById('tAqi').checked=true;
-  reRank();
-}
-
-function updateHealthHint(){
-  const aqi=env.aqi||60;
-  const hints={
-    none:'Standard routing — no health adjustments active.',
-    mild:`Mild mode: Avoiding AQI>${aqi>75?'⚠️ Current zone is over limit':' threshold 75'}`,
-    moderate:`Moderate mode: Stricter AQI thresholds. ${conditions.has('asthma')?'Asthma routing on.':''}`,
-    severe:'Severe mode: Maximum pollution avoidance on all dimensions.'
-  };
-  document.getElementById('healthRouteHint').textContent = hints[healthProfile]||'';
-}
-
-// ═══════════════════════════════════════
-// ENV / SENSOR DATA
-// ═══════════════════════════════════════
+// ═══════════ ENV ═══════════
 async function fetchEnv(lat,lon){
-  const url=`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5,pm10,us_aqi,grass_pollen,alder_pollen,birch_pollen,weed_pollen,uv_index&timezone=auto&forecast_days=1`;
+  const url=`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5,us_aqi,grass_pollen,alder_pollen,birch_pollen,uv_index&timezone=auto&forecast_days=1`;
   try{
     const d=await(await fetch(url)).json();
-    const h=d.hourly, hr=new Date().getHours();
+    const h=d.hourly,hr=new Date().getHours();
     const g=k=>h[k]?.[hr]??h[k]?.[0]??null;
-    
-    // Blend with our CSV AQI data
-    const apiAqi = g('us_aqi');
-    const csvAqi = AQI_CSV.avg;
-    
-    env={
-      pm25:g('pm2_5'), pm10:g('pm10'), aqi: apiAqi,
-      csvAqi: csvAqi,
-      tree:Math.max(g('alder_pollen')??0,g('birch_pollen')??0),
-      grass:g('grass_pollen'), weed:g('weed_pollen'), uv:g('uv_index'),
-      noise: estimateNoiseForPath([[lat,lon]])
-    };
-    updEnvUI();
-    buildHeat(lat,lon);
-    buildAlerts();
-    updateHealthHint();
+    env={aqi:g('us_aqi'),pm25:g('pm2_5'),grass:g('grass_pollen'),tree:Math.max(g('alder_pollen')??0,g('birch_pollen')??0),uv:g('uv_index'),noise:68};
+    updEnvUI();buildAqiHeat(lat,lon);
   }catch(e){
-    env={pm25:45,pm10:75,aqi:AQI_CSV.avg,csvAqi:AQI_CSV.avg,tree:1,grass:2,weed:1,uv:8,noise:68};
-    updEnvUI();buildHeat(lat,lon);buildAlerts();
-    toast('Using CSV sensor data (API unreachable)','warning');
+    env={aqi:AQI_CSV.avg,pm25:45,grass:2,tree:1,uv:8,noise:68};
+    updEnvUI();buildAqiHeat(lat,lon);
+    toast('Using CSV data (API offline)','warning');
   }
 }
 
-function lbl(v,thr,labs){if(v==null)return['—','sb-g'];for(let i=0;i<thr.length;i++)if(v<=thr[i])return[labs[i],['sb-g','sb-m','sb-h'][i]];return[labs[labs.length-1],'sb-h'];}
-function setMx(id,val,bId,max,col){const el=document.getElementById(id);if(el)el.textContent=val!=null?(Number.isInteger(val)?val:val.toFixed(1)):'—';if(bId&&val!=null){const b=document.getElementById(bId);if(b){b.style.width=Math.min(100,(val/max)*100)+'%';b.style.background=col;}}}
+function lbl(v,thr,labs){if(v==null)return['—','badge-g'];for(let i=0;i<thr.length;i++)if(v<=thr[i])return[labs[i],['badge-g','badge-m','badge-h'][i]];return[labs[labs.length-1],'badge-h'];}
+function setMx(id,val,bId,max,col){
+  const el=document.getElementById(id);if(el)el.textContent=val!=null?(typeof val==='number'&&!Number.isInteger(val)?val.toFixed(1):Math.round(val)):'—';
+  if(bId&&val!=null){const b=document.getElementById(bId);if(b){b.style.width=Math.min(100,(val/max)*100)+'%';b.style.background=col;}}
+}
 
 function updEnvUI(){
-  document.getElementById('envLd').style.display='none';
-  document.getElementById('mxg').style.display='grid';
-  const{pm25,pm10,aqi,csvAqi,tree,grass,uv,noise}=env;
-  
-  // Use CSV AQI as the primary display value when close enough
-  const displayAqi = aqi ?? csvAqi ?? 60;
-  
-  const[al,ac]=lbl(displayAqi,[50,100,150],['GOOD','MOD','USG','POOR']);
-  document.getElementById('bAqi').textContent=al;document.getElementById('bAqi').className='bx '+ac;
-  const aqiCol=ac==='sb-g'?'var(--safe)':ac==='sb-m'?'var(--mod)':'var(--haz)';
-  setMx('mAqi',Math.round(displayAqi),'bAqiBar',200,aqiCol);
-
-  const bv=document.getElementById('aqiBadgeVal');
-  if(bv){bv.textContent=Math.round(displayAqi);bv.style.color=aqiCol;}
-  document.getElementById('aqiBadgeLoc').textContent=currentLocationName.split(',')[0];
-
+  document.getElementById('envLoading').style.display='none';
+  document.getElementById('metricGrid').style.display='grid';
+  const{aqi,pm25,grass,tree,uv,noise}=env;
+  const dAqi=aqi??AQI_CSV.avg;
+  const[al,ac]=lbl(dAqi,[50,100,150],['GOOD','MOD','POOR','HAZ']);
+  const aqiCol=ac==='badge-g'?'var(--primary)':ac==='badge-m'?'var(--secondary)':'var(--tertiary)';
+  document.getElementById('bAqi').textContent=al;document.getElementById('bAqi').className='metric-badge '+ac;
+  setMx('mAqi',dAqi,'bAqiBar',200,aqiCol);
+  const bv=document.getElementById('aqiVal');
+  if(bv){bv.textContent=Math.round(dAqi);bv.style.color=aqiCol;}
+  document.getElementById('aqiLoc').textContent=currentLocName.split(',')[0];
   const[p25l,p25c]=lbl(pm25,[12,35],['GOOD','MOD','HIGH']);
-  document.getElementById('bPm25').textContent=p25l;document.getElementById('bPm25').className='bx '+p25c;
-  setMx('mPm25',pm25,'bPm25Bar',150,p25c==='sb-g'?'var(--safe)':p25c==='sb-m'?'var(--mod)':'var(--haz)');
-
-  // Noise from CSV average
-  const noiseVal = noise || 68;
-  const noiseLabel = noiseVal<55?'QUIET':noiseVal<70?'MOD':'LOUD';
-  const noiseCls = noiseVal<55?'sb-g':noiseVal<70?'sb-m':'sb-h';
-  document.getElementById('bNs').textContent=noiseLabel;document.getElementById('bNs').className='bx '+noiseCls;
-  setMx('mNoise',Math.round(noiseVal),'bNsBar',90,noiseVal<55?'var(--noise-safe)':noiseVal<70?'var(--noise-mod)':'var(--noise-haz)');
-  document.getElementById('ndsp').textContent=Math.round(noiseVal);
-  document.querySelectorAll('.nb').forEach(b=>{b.style.background=noiseVal<55?'var(--noise-safe)':noiseVal<70?'var(--noise-mod)':'var(--noise-haz)';});
-
-  const[tl,tc]=lbl(tree,[1,3],['LOW','MOD','HIGH']);
-  document.getElementById('bTree').textContent=tl;document.getElementById('bTree').className='bx '+tc;
-  setMx('mTree',tree,'bTreeBar',5,'#A78BFA');
-
+  document.getElementById('bPm25').textContent=p25l;document.getElementById('bPm25').className='metric-badge '+p25c;
+  setMx('mPm25',pm25,'bPm25Bar',150,p25c==='badge-g'?'var(--primary)':p25c==='badge-m'?'var(--secondary)':'var(--tertiary)');
+  const nv=noise??68, nc=nv<55?'badge-g':nv<70?'badge-m':'badge-h';
+  document.getElementById('bNs').textContent=nv<55?'QUIET':nv<70?'MOD':'LOUD';document.getElementById('bNs').className='metric-badge '+nc;
+  setMx('mNoise',nv,'bNsBar',90,nc==='badge-g'?'var(--primary)':nc==='badge-m'?'var(--secondary)':'var(--tertiary)');
   const[gl,gc]=lbl(grass,[1,3],['LOW','MOD','HIGH']);
-  document.getElementById('bGrass').textContent=gl;document.getElementById('bGrass').className='bx '+gc;
-  setMx('mGrass',grass,'bGrassBar',5,'#A78BFA');
-
-  setMx('mUv',uv,'bUvBar',12,'#F59E0B');
-
-  document.getElementById('cAqi').textContent=`AQI ${Math.round(displayAqi)||'?'}`;
-  document.getElementById('cPollen').textContent=grass<=1?'Low Pollen':grass<=3?'Mod Pollen':'High Pollen';
-  updScore(null,null);
-
-  if(displayAqi>100){
-    document.getElementById('paTitle').textContent=`⚠️ AQI ${Math.round(displayAqi)} — ${displayAqi>150?'Hazardous':'Unhealthy'}`;
-    document.getElementById('paDesc').textContent=healthProfile!=='none'?`${healthProfile} sensitivity — eco route strongly advised`:'Air quality is poor. Greener route suggested.';
-    document.getElementById('paIcon').className='pi '+(displayAqi>150?'r':'a');
-    document.getElementById('paIcon').innerHTML='<span class="material-symbols-outlined">warning</span>';
+  document.getElementById('bGrass').textContent=gl;document.getElementById('bGrass').className='metric-badge '+gc;
+  setMx('mGrass',grass,'bGrassBar',5,'#7c3aed');
+  const[tl,tc]=lbl(tree,[1,3],['LOW','MOD','HIGH']);
+  document.getElementById('bTree').textContent=tl;document.getElementById('bTree').className='metric-badge '+tc;
+  setMx('mTree',tree,'bTreeBar',5,'#7c3aed');
+  setMx('mUv',uv,'bUvBar',12,'#765600');
+  document.getElementById('chipAqi').textContent=`AQI ${Math.round(dAqi)||'?'}`;
+  document.getElementById('chipPollen').textContent=grass<=1?'Low Pollen':grass<=3?'Mod Pollen':'High Pollen';
+  updScore(null);
+  const floatIcon=document.getElementById('envIcon');
+  const floatTitle=document.getElementById('envTitle');
+  const floatSub=document.getElementById('envSub');
+  if(dAqi>100){
+    floatIcon.className='env-float-icon '+(dAqi>150?'bad':'warn');
+    floatIcon.innerHTML=`<span class="material-symbols-outlined">warning</span>`;
+    floatTitle.textContent=`AQI ${Math.round(dAqi)} — ${dAqi>150?'Hazardous':'Unhealthy'}`;
+    floatSub.textContent=healthProfile!=='none'?`${healthProfile} sensitivity — eco route advised`:'Air quality poor. Eco route suggested.';
   }else{
-    document.getElementById('paTitle').textContent=`✅ AQI ${Math.round(displayAqi)||'?'} — Conditions OK`;
-    document.getElementById('paDesc').textContent='Air quality acceptable for eco travel.';
-    document.getElementById('paIcon').className='pi g';
-    document.getElementById('paIcon').innerHTML='<span class="material-symbols-outlined">check_circle</span>';
+    floatIcon.className='env-float-icon ok';
+    floatIcon.innerHTML=`<span class="material-symbols-outlined">check_circle</span>`;
+    floatTitle.textContent=`AQI ${Math.round(dAqi)||'?'} — Conditions OK`;
+    floatSub.textContent='Good conditions for eco travel.';
   }
+  reRank();
 }
 
-function updScore(force,fc){
-  const{aqi,csvAqi,grass}=env;
-  const displayAqi=aqi??csvAqi??60;
-  let sc=force;
-  if(sc==null){
-    const a=Math.max(0,100-displayAqi*.5);
-    const p=grass!=null?Math.max(0,100-grass*15):90;
-    const n=Math.max(0,100-(env.noise||68-50)*2.5);
-    sc=Math.round((a+p+n)/3);
-    if(healthProfile==='mild') sc=Math.round(sc*0.9);
-    else if(healthProfile==='moderate') sc=Math.round(sc*0.8);
-    else if(healthProfile==='severe') sc=Math.round(sc*0.7);
-  }
+function updScore(force){
+  const{aqi,grass}=env;
+  const dAqi=aqi??AQI_CSV.avg;
+  let sc=force??scoreRoute([]);
   sc=Math.max(10,Math.min(100,sc));
-  const cb=fc??(sc/100*3.2).toFixed(1);
-  document.getElementById('sval').textContent=sc;
-  const c=sc>=80?'var(--safe)':sc>=60?'var(--mod)':'var(--haz)';
-  document.getElementById('sring').setAttribute('stroke-dashoffset',157*(1-sc/100));
-  document.getElementById('sring').setAttribute('stroke',c);
-  document.getElementById('slbl').textContent=sc>=80?'Excellent — Safe for all':sc>=60?'Moderate Conditions':sc>=40?'Poor — Caution':'Hazardous — Avoid Outdoor';
-  document.getElementById('ssub').textContent=`${cb}kg CO₂ saved · CSV AQI ${Math.round(csvAqi||60)}`;
+  document.getElementById('scoreNum').textContent=sc;
+  document.getElementById('ecoRingVal').textContent=sc;
+  const col=sc>=80?'var(--primary)':sc>=60?'var(--secondary)':'var(--tertiary)';
+  const offset=176*(1-sc/100);
+  const rOffset=138*(1-sc/100);
+  document.getElementById('scoreRing').style.strokeDashoffset=offset;
+  document.getElementById('scoreRing').style.stroke=col;
+  document.getElementById('ecoRingCircle').style.strokeDashoffset=rOffset;
+  document.getElementById('ecoRingCircle').style.stroke=col;
+  document.getElementById('ecoRingSub').textContent=sc>=80?'GREAT':sc>=60?'OK':'POOR';
+  document.getElementById('scoreLbl').textContent=sc>=80?'Excellent — Safe for all':sc>=60?'Moderate — Caution advised':sc>=40?'Poor — Caution':'Hazardous';
+  document.getElementById('scoreSub').textContent=`${(sc/100*3.2).toFixed(1)}kg CO₂ saved · CSV AQI ${Math.round(AQI_CSV.avg)}`;
 }
 
-// ═══════════════════════════════════════
-// HEATMAPS
-// ═══════════════════════════════════════
-function genPts(cLat,cLon,base,hotspots,spread=0.04){
-  const pts=[];const norm=Math.min(1,base/150);
-  for(let i=0;i<80;i++){
-    const lat=cLat+(Math.random()-.5)*spread;
-    const lon=cLon+(Math.random()-.5)*spread;
-    let intens=norm*(.5+Math.random()*.5);
-    hotspots.forEach(s=>{const d=Math.hypot(lat-s.ll[0],lon-s.ll[1]);if(d<.012)intens=Math.min(1,intens*s.m);});
-    pts.push([lat,lon,Math.min(1,intens)]);
+function buildAqiHeat(lat,lon){
+  const aqi=env.aqi??AQI_CSV.avg;
+  const grass=env.grass??2;
+  const norm=Math.min(1,aqi/150);
+  const pts=[],pPts=[];
+  const hs=[{ll:[lat-.01,lon+.01],m:1.8},{ll:[lat+.015,lon-.005],m:1.5},{ll:[lat-.02,lon+.02],m:2}];
+  for(let i=0;i<90;i++){
+    const a=lat+(Math.random()-.5)*.06,b=lon+(Math.random()-.5)*.06;
+    let iv=norm*(.4+Math.random()*.6);
+    hs.forEach(s=>{if(Math.hypot(a-s.ll[0],b-s.ll[1])<.012)iv=Math.min(1,iv*s.m);});
+    pts.push([a,b,Math.min(1,iv)]);
+    pPts.push([a+(Math.random()-.5)*.02,b+(Math.random()-.5)*.02,Math.min(1,(grass??2)/5*(.3+Math.random()*.7))]);
   }
-  for(let i=0;i<50;i++){const lat=cLat+(Math.random()-.5)*spread*2;const lon=cLon+(Math.random()-.5)*spread*2;pts.push([lat,lon,norm*(.2+Math.random()*.3)]);}
-  return pts;
-}
-
-function buildHeat(lat,lon){
-  const{aqi,csvAqi,grass}=env;
-  const displayAqi=aqi??csvAqi??60;
-  const cLat=lat||userLat||DEFAULT[0];
-  const cLon=lon||userLon||DEFAULT[1];
-  
-  const hotAqi=[{ll:[cLat-.01,cLon+.01],m:1.8},{ll:[cLat+.015,cLon-.005],m:1.5},{ll:[cLat-.02,cLon+.02],m:2.0}];
-  const hotPollen=[{ll:[cLat+.008,cLon-.008],m:2.2},{ll:[cLat-.015,cLon+.012],m:1.7}];
-
-  const aqiPts=genPts(cLat,cLon,displayAqi,hotAqi);
-  const polPts=genPts(cLat,cLon,(grass??2)*35,hotPollen);
-
   ['aqi','pollen'].forEach(k=>{if(hLayers[k])map.removeLayer(hLayers[k]);});
-  if(hLayers.noise)map.removeLayer(hLayers.noise);
-
-  hLayers.aqi=L.heatLayer(aqiPts,{radius:45,blur:30,maxZoom:18,minOpacity:0.4,max:1.0,gradient:{0.0:'rgba(0,200,150,0)',0.3:'rgba(0,200,150,0.7)',0.55:'rgba(245,158,11,0.9)',0.8:'rgba(239,68,68,1)',1:'rgba(180,0,0,1)'}});
-  hLayers.pollen=L.heatLayer(polPts,{radius:50,blur:35,maxZoom:18,minOpacity:0.3,max:1.0,gradient:{0.0:'rgba(167,139,250,0)',0.3:'rgba(167,139,250,0.7)',0.7:'rgba(245,158,11,0.9)',1:'rgba(239,68,68,1)'}});
-  
-  // Re-add noise from CSV data  
-  const minDb=56, maxDb=82;
-  const noisePts=DECIBEL_DATA.map(r=>[r[0],r[1],(r[2]-minDb)/(maxDb-minDb)]);
-  hLayers.noise=L.heatLayer(noisePts,{radius:25,blur:18,maxZoom:18,minOpacity:0.35,max:1.0,gradient:{0.0:'rgba(59,130,246,0)',0.25:'rgba(59,130,246,0.7)',0.55:'rgba(139,92,246,0.85)',0.8:'rgba(236,72,153,0.95)',1:'rgba(239,68,68,1)'}});
-
-  // Auto-show AQI layer
+  hLayers.aqi=L.heatLayer(pts,{radius:40,blur:28,maxZoom:18,minOpacity:0.35,gradient:{0:'rgba(0,106,43,0)',0.3:'rgba(0,106,43,0.7)',0.55:'rgba(118,86,0,0.85)',0.8:'rgba(180,26,20,1)'}});
+  hLayers.pollen=L.heatLayer(pPts,{radius:45,blur:32,maxZoom:18,minOpacity:0.3,gradient:{0:'rgba(124,58,237,0)',0.35:'rgba(124,58,237,0.6)',0.7:'rgba(118,86,0,0.85)',1:'rgba(180,26,20,1)'}});
   hLayers.aqi.addTo(map);
   document.getElementById('lAqi').classList.add('on');
-}
-
-function buildAlerts(){
-  const{aqi,csvAqi,grass,noise}=env;
-  const displayAqi=aqi??csvAqi??60;
-  const list=[];
-  if(displayAqi>150)list.push({cls:'r',title:`Hazardous AQI ${Math.round(displayAqi)}`,desc:'Avoid outdoor activity. Use eco or low-pollution route.',time:'Now'});
-  else if(displayAqi>100)list.push({cls:'a',title:`Unhealthy AQI ${Math.round(displayAqi)}`,desc:'Sensitive groups at risk. Low-pollution route advised.',time:'Now'});
-  else list.push({cls:'g',title:`AQI ${Math.round(displayAqi)} — Acceptable`,desc:'Conditions OK for eco travel.',time:'Now'});
-  if(grass>3)list.push({cls:'r',title:'High Pollen Alert',desc:'Grass pollen very high. Enable pollen avoidance.',time:'Today'});
-  else if(grass>1)list.push({cls:'a',title:'Moderate Pollen',desc:'Consider enabling pollen avoidance filter.',time:'Today'});
-  if(noise>75)list.push({cls:'r',title:`High Noise Zone (${noise}dB)`,desc:'Campus area has elevated noise. Use quiet route.',time:'Sensor CSV'});
-  else if(noise>65)list.push({cls:'a',title:`Moderate Noise (${noise}dB)`,desc:'Some noisy roads detected in sensor data.',time:'Sensor CSV'});
-  if(healthProfile!=='none')list.push({cls:'a',title:`Health: ${healthProfile.charAt(0).toUpperCase()+healthProfile.slice(1)} mode active`,desc:'Routes are being adjusted for your health profile.',time:'Profile'});
-  document.getElementById('alertsList').innerHTML=list.map(a=>`<div class="ai"><div class="ad ${a.cls}"></div><div class="at"><h4>${a.title}</h4><p>${a.desc}</p><div class="atm">${a.time}</div></div></div>`).join('');
 }
 
 function toggleLayer(id){
@@ -1261,126 +1078,95 @@ function toggleLayer(id){
     if(map.hasLayer(hLayers[id])){map.removeLayer(hLayers[id]);btn.classList.remove('on');}
     else{hLayers[id].addTo(map);btn.classList.add('on');}
   }
-  if(id==='pins'){pinsLayerVisible=!pinsLayerVisible;locMarkers.forEach(m=>pinsLayerVisible?map.addLayer(m):map.removeLayer(m));btn.classList.toggle('on',pinsLayerVisible);}
+}
+function togglePinLayer(){
+  pinsVisible=!pinsVisible;
+  locMarkers.forEach(m=>pinsVisible?map.addLayer(m):map.removeLayer(m));
+  document.getElementById('lPins').classList.toggle('on',pinsVisible);
 }
 
-// ═══════════════════════════════════════
-// CUSTOM LOCATIONS
-// ═══════════════════════════════════════
-const CAT_COLORS = {campus:'#A78BFA',home:'#00C896',work:'#3B82F6',other:'#F59E0B'};
-const CAT_ICONS = {campus:'school',home:'home',work:'business',other:'place'};
+// ═══════════ HEALTH ═══════════
+const HEALTH_DESCS={none:'Standard eco routing. No adjustments.',mild:'Mild mode: Avoids AQI > 75. Greener paths preferred.',moderate:'Moderate: Strict AQI < 50 threshold. Pollen + noise considered.',severe:'Severe: Maximum avoidance. Only cleanest air paths.'};
+function setHealth(level,btn){
+  healthProfile=level;
+  document.querySelectorAll('.health-btn[id^="hp"]').forEach(b=>b.classList.remove('on','on-m','on-g'));
+  btn.classList.add(level==='none'?'on-g':level==='mild'?'on-m':'on');
+  document.getElementById('healthDesc').textContent=HEALTH_DESCS[level];
+  toast(`Profile: ${level.charAt(0).toUpperCase()+level.slice(1)}`,'info');
+  reRank(); updScore(null);
+  const hints={none:'Standard routing — no adjustments.',mild:'Mild: AQI > 75 routes deprioritised.',moderate:'Moderate: Strict thresholds on AQI + noise.',severe:'Severe: Maximum pollution avoidance active.'};
+  document.getElementById('healthHint').textContent=hints[level];
+}
+function toggleCondition(c,btn){
+  if(conditions.has(c)){conditions.delete(c);btn.classList.remove('on');}
+  else{conditions.add(c);btn.classList.add('on');}
+  if(c==='allergy')document.getElementById('tPollen').checked=conditions.has('allergy');
+  if(c==='asthma')document.getElementById('tAqi').checked=true;
+  reRank();
+}
 
-function saveLocs(){ localStorage.setItem('ecoroute_locs', JSON.stringify(customLocations)); }
+// ═══════════ CUSTOM LOCATIONS ═══════════
+const CAT_COLORS={campus:'#7c3aed',home:'#006a2b',work:'#2563eb',other:'#765600'};
+const CAT_ICONS={campus:'school',home:'home',work:'business',other:'place'};
+function saveLocs(){localStorage.setItem('eco_locs',JSON.stringify(customLocations));}
 
-function addCustomLocation(name, addr, lat, lon, cat){
-  const loc = {id:Date.now(), name, addr, lat, lon, cat};
-  customLocations.push(loc);
-  saveLocs();
-  renderLocList();
-  renderLocMarkers();
+function addCustomLocation(name,addr,lat,lon,cat){
+  customLocations.push({id:Date.now(),name,addr,lat,lon,cat});
+  saveLocs();renderLocList();renderLocMarkers();
+  map.flyTo([lat,lon],16,{duration:1});
   toast(`📍 "${name}" saved`,'success');
-  map.flyTo([lat,lon], 16, {duration:1});
 }
-
 async function addLocationByAddress(){
-  const name = document.getElementById('newLocName').value.trim();
-  const addr = document.getElementById('newLocAddr').value.trim();
-  const cat = document.getElementById('newLocCat').value;
-  if(!name){ toast('Enter a name','warning'); return; }
-  if(!addr){
-    if(userLat){ addCustomLocation(name,'My Location',userLat,userLon,cat); }
-    else toast('Enter an address or pin on map','warning');
-    return;
-  }
-  const res = await geocode(addr);
-  if(!res.length){ toast('Address not found','warning'); return; }
-  const r = res[0];
-  addCustomLocation(name, r.display_name.split(',').slice(0,3).join(', '), parseFloat(r.lat), parseFloat(r.lon), cat);
-  document.getElementById('newLocName').value='';
-  document.getElementById('newLocAddr').value='';
+  const name=document.getElementById('newLocName').value.trim();
+  const addr=document.getElementById('newLocAddr').value.trim();
+  const cat=document.getElementById('newLocCat').value;
+  if(!name){toast('Enter a name','warning');return;}
+  if(!addr){if(userLat){addCustomLocation(name,'My Location',userLat,userLon,cat);}else toast('Enter address or pin on map','warning');return;}
+  const res=await geocode(addr);
+  if(!res.length){toast('Address not found','warning');return;}
+  addCustomLocation(name,res[0].display_name.split(',').slice(0,3).join(', '),parseFloat(res[0].lat),parseFloat(res[0].lon),cat);
+  document.getElementById('newLocName').value='';document.getElementById('newLocAddr').value='';
 }
-
-function deleteLocation(id){
-  customLocations = customLocations.filter(l=>l.id!==id);
-  saveLocs();
-  renderLocList();
-  renderLocMarkers();
-  toast('Location removed','info');
-}
-
-function useLocationAsFrom(loc){
-  setFrom(loc.lat, loc.lon, loc.name);
-  showPane('route');
-  toast(`From: ${loc.name}`,'success');
-}
-
-function useLocationAsTo(loc){
-  setTo(loc.lat, loc.lon, loc.name);
-  showPane('route');
-  toast(`To: ${loc.name}`,'success');
-}
-
-function filterCat(cat, btn){
-  catFilter=cat;
-  document.querySelectorAll('.cat-pill').forEach(p=>p.classList.remove('on'));
-  btn.classList.add('on');
-  renderLocList();
-}
+function deleteLocation(id){customLocations=customLocations.filter(l=>l.id!==id);saveLocs();renderLocList();renderLocMarkers();}
+function useAsFrom(l){setFrom(l.lat,l.lon,l.name);showTab('route');setActiveNav('route');}
+function useAsTo(l){setTo(l.lat,l.lon,l.name);showTab('route');setActiveNav('route');}
+function filterCat(cat,btn){catFilter=cat;document.querySelectorAll('.cat-chip').forEach(p=>p.classList.remove('on'));btn.classList.add('on');renderLocList();}
 
 function renderLocList(){
-  const filtered = catFilter==='all' ? customLocations : customLocations.filter(l=>l.cat===catFilter);
-  const el=document.getElementById('locList');
-  if(!filtered.length){
-    el.innerHTML=`<div style="font-size:.65rem;color:var(--muted);padding:8px;text-align:center">${catFilter==='all'?'No saved locations yet. Add one below.':'No '+catFilter+' locations saved.'}</div>`;
-    return;
-  }
-  el.innerHTML=filtered.map(l=>`
+  const fl=catFilter==='all'?customLocations:customLocations.filter(l=>l.cat===catFilter);
+  if(!fl.length){document.getElementById('locList').innerHTML=`<div class="no-routes">${catFilter==='all'?'No saved locations yet.':'No '+catFilter+' locations.'}</div>`;return;}
+  document.getElementById('locList').innerHTML=fl.map(l=>`
     <div class="loc-item" onclick="map.flyTo([${l.lat},${l.lon}],16)">
-      <div class="loc-dot" style="background:${CAT_COLORS[l.cat]||'#00C896'}"></div>
-      <div class="loc-info">
-        <div class="loc-name">${l.name}</div>
-        <div class="loc-addr">${l.addr||`${l.lat.toFixed(4)}, ${l.lon.toFixed(4)}`}</div>
-      </div>
+      <div class="loc-dot" style="background:${CAT_COLORS[l.cat]||'#006a2b'}"></div>
+      <div style="flex:1;min-width:0"><div class="loc-name">${l.name}</div><div class="loc-addr">${l.addr||l.cat}</div></div>
       <div class="loc-actions">
-        <button class="loc-btn use-btn" onclick="event.stopPropagation();useLocationAsFrom(${JSON.stringify(l).replace(/"/g,"'")})" title="Use as start"><span class="material-symbols-outlined">trip_origin</span></button>
-        <button class="loc-btn use-btn" onclick="event.stopPropagation();useLocationAsTo(${JSON.stringify(l).replace(/"/g,"'")})" title="Use as destination"><span class="material-symbols-outlined">flag</span></button>
-        <button class="loc-btn del-btn" onclick="event.stopPropagation();deleteLocation(${l.id})" title="Delete"><span class="material-symbols-outlined">delete</span></button>
+        <button class="loc-act" onclick="event.stopPropagation();useAsFrom(${JSON.stringify(l).replace(/"/g,"'")})" title="From"><span class="material-symbols-outlined">trip_origin</span></button>
+        <button class="loc-act" onclick="event.stopPropagation();useAsTo(${JSON.stringify(l).replace(/"/g,"'")})" title="To"><span class="material-symbols-outlined">flag</span></button>
+        <button class="loc-act del" onclick="event.stopPropagation();deleteLocation(${l.id})" title="Delete"><span class="material-symbols-outlined">delete</span></button>
       </div>
     </div>`).join('');
 }
 
 function renderLocMarkers(){
-  locMarkers.forEach(m=>{ try{map.removeLayer(m);}catch(e){} });
-  locMarkers=[];
+  locMarkers.forEach(m=>{try{map.removeLayer(m);}catch(e){}});locMarkers=[];
   customLocations.forEach(loc=>{
-    const color = CAT_COLORS[loc.cat]||'#00C896';
-    const icon = CAT_ICONS[loc.cat]||'place';
-    const divIcon = L.divIcon({
-      html:`<div style="background:${color};width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center">
-        <span class="material-symbols-outlined" style="transform:rotate(45deg);font-size:14px;color:#fff">${icon}</span>
-      </div>`,
-      iconSize:[28,28],iconAnchor:[14,28],className:''
-    });
-    const m = L.marker([loc.lat,loc.lon],{icon:divIcon}).addTo(map);
-    m.bindPopup(`<b>${loc.name}</b><br><small style="color:rgba(232,240,254,0.6)">${loc.addr||loc.cat}</small><br>
-      <div style="margin-top:6px;display:flex;gap:4px">
-        <button onclick="useLocationAsFrom(${JSON.stringify(loc).replace(/"/g,"'")})" style="flex:1;padding:3px;background:rgba(0,200,150,0.2);border:1px solid rgba(0,200,150,0.4);border-radius:5px;color:var(--safe);font-size:.6rem;cursor:pointer">From</button>
-        <button onclick="useLocationAsTo(${JSON.stringify(loc).replace(/"/g,"'")})" style="flex:1;padding:3px;background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);border-radius:5px;color:var(--haz);font-size:.6rem;cursor:pointer">To</button>
-      </div>`);
+    const c=CAT_COLORS[loc.cat]||'#006a2b';
+    const ic=CAT_ICONS[loc.cat]||'place';
+    const di=L.divIcon({html:`<div style="background:${c};width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="transform:rotate(45deg);font-size:14px;color:#fff">${ic}</span></div>`,iconSize:[30,30],iconAnchor:[15,30],className:''});
+    const m=L.marker([loc.lat,loc.lon],{icon:di}).addTo(map);
+    m.bindPopup(`<div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;margin-bottom:4px">${loc.name}</div><div style="font-size:.72rem;color:var(--on-surface-var)">${loc.addr||loc.cat}</div><div style="display:flex;gap:6px;margin-top:8px"><button onclick="useAsFrom(${JSON.stringify(loc).replace(/"/g,"'")})" style="flex:1;padding:5px;background:var(--primary-container);border:none;border-radius:8px;font-size:.64rem;font-weight:700;cursor:pointer;color:var(--on-primary-cont)">From</button><button onclick="useAsTo(${JSON.stringify(loc).replace(/"/g,"'")})" style="flex:1;padding:5px;background:var(--tertiary-cont);border:none;border-radius:8px;font-size:.64rem;font-weight:700;cursor:pointer;color:var(--on-tertiary-cont)">To</button></div>`);
     locMarkers.push(m);
   });
 }
 
 function togglePinMode(){
   pinDropMode=!pinDropMode;
-  document.getElementById('pinModeBar').classList.toggle('show',pinDropMode);
+  document.getElementById('pinBar').classList.toggle('show',pinDropMode);
   document.getElementById('pinModeBtn').classList.toggle('active',pinDropMode);
-  if(pinDropMode) toast('Click on the map to drop a pin','info');
+  if(pinDropMode)toast('Tap map to drop a pin','info');
 }
 
-// ═══════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════
+// ═══════════ NAV ═══════════
 function toggleNav(){
   navOn=!navOn;
   const btn=document.getElementById('navBtn');
@@ -1388,119 +1174,86 @@ function toggleNav(){
     if(!routeData.length){toast('Find a route first','warning');navOn=false;return;}
     btn.innerHTML='<span class="material-symbols-outlined">stop</span>Stop Navigation';
     btn.classList.add('active');
-    toast('🧭 Eco navigation started','success');
-    setTimeout(()=>{ if(navOn&&(env.aqi||60)>80) toast(`⚠️ AQI ${Math.round(env.aqi||60)} zone on route — stay on eco path`,'warning'); },3000);
+    toast('🧭 Navigation started','success');
+    setTimeout(()=>{if(navOn&&(env.aqi??60)>80)toast(`⚠️ AQI ${Math.round(env.aqi)} zone — stay on eco path`,'warning');},2500);
   }else{
     btn.innerHTML='<span class="material-symbols-outlined">near_me</span>Start Navigation';
     btn.classList.remove('active');
     toast('Navigation stopped','info');
-    document.getElementById('proxAlert').classList.remove('show');
   }
 }
 
 function locateMe(){
-  if(!navigator.geolocation){toast('Geolocation not available','warning');return;}
-  navigator.geolocation.getCurrentPosition(pos=>{
-    userLat=pos.coords.latitude;userLon=pos.coords.longitude;
+  if(!navigator.geolocation){toast('Location unavailable','warning');return;}
+  navigator.geolocation.getCurrentPosition(p=>{
+    userLat=p.coords.latitude;userLon=p.coords.longitude;
     map.flyTo([userLat,userLon],15,{duration:1.2});
     fetchEnv(userLat,userLon);
-    toast('📍 Located you','success');
+    toast('📍 Located','success');
   },()=>toast('Could not get location','warning'));
 }
 
-// ═══════════════════════════════════════
-// UI HELPERS
-// ═══════════════════════════════════════
-function showPane(p){
-  document.querySelectorAll('.pnl').forEach(x=>x.classList.remove('on'));
-  document.querySelectorAll('.tbt').forEach(x=>x.classList.remove('on'));
-  document.getElementById('pnl-'+p).classList.add('on');
-  document.getElementById('tb-'+p).classList.add('on');
+// ═══════════ UI ═══════════
+function showTab(t){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.sheet-tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pane-'+t).classList.add('on');
+  document.getElementById('tab-'+t).classList.add('on');
+  if(sheetState==='peek'){sheetState='half';applySheet();}
+}
+
+function setActiveNav(t){
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('on'));
+  document.getElementById('bnav-'+t)?.classList.add('on');
 }
 
 function setMode(btn,m){
-  document.querySelectorAll('.mb').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
   travelMode=PROFILES[m]||'foot';
-  toast({walk:'🚶 Walking',bike:'🚲 Cycling',bus:'🚌 Transit',car:'🚗 Driving'}[m]+' mode','success');
+  toast({walk:'🚶 Walking',bike:'🚲 Cycling',bus:'🚌 Transit',car:'🚗 Driving'}[m],'info');
   if(routeData.length>0)findRoutes();
-}
-
-function dimAlert(){
-  const e=document.getElementById('polA');
-  e.style.opacity='0';
-  setTimeout(()=>e.style.display='none',300);
 }
 
 function toast(msg,type='info'){
   const icons={success:'check_circle',warning:'warning',danger:'error',info:'info'};
   const w=document.getElementById('tw');
   const t=document.createElement('div');
-  t.className=`tst ${type==='info'?'':type}`;
-  t.innerHTML=`<span class="material-symbols-outlined">${icons[type]||'info'}</span>${msg}`;
+  t.className=`tst${type!=='info'?' '+type:''}`;
+  t.innerHTML=`<span class="material-symbols-outlined">${icons[type]}</span>${msg}`;
   w.appendChild(t);
-  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),300);},3800);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),250);},3500);
 }
 
-function animCount(){
-  const tg={iC:8.4,iT:32,iP:AQI_CSV.avg*5};
-  Object.entries(tg).forEach(([id,tv])=>{
-    let cur=0;const step=tv/40;
-    const iv=setInterval(()=>{cur=Math.min(tv,cur+step);document.getElementById(id).textContent=Number.isInteger(tv)?Math.round(cur):cur.toFixed(1);if(cur>=tv)clearInterval(iv);},30);
-  });
-}
-
-function renderAQIChart(){
-  // Hourly AQI bars from CSV data
-  const hours = [{h:18,aqi:67.7},{h:19,aqi:53.5},{h:21,aqi:85.2},{h:22,aqi:57.2}];
-  const maxAqi = 100;
-  const chart = document.getElementById('aqiChart');
-  if(!chart) return;
-  chart.innerHTML = hours.map(r=>{
-    const pct = Math.min(100, (r.aqi/maxAqi)*100);
-    const col = r.aqi<50?'var(--safe)':r.aqi<100?'var(--mod)':'var(--haz)';
-    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
-      <div style="font-size:.42rem;font-family:'JetBrains Mono';color:var(--muted)">${Math.round(r.aqi)}</div>
-      <div style="flex:1;width:100%;display:flex;align-items:flex-end">
-        <div style="width:100%;height:${pct}%;background:${col};border-radius:3px 3px 0 0;transition:height .8s ease"></div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ═══════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════
+// ═══════════ INIT ═══════════
 document.addEventListener('DOMContentLoaded',()=>{
   initMap();
-  animCount();
   renderLocList();
-  
-  // Add some default campus locations
-  if(customLocations.length===0){
-    const defaults=[
+
+  // Pre-load default campus locations
+  if(!customLocations.length){
+    customLocations=[
       {id:1,name:'Main Gate',addr:'Campus Main Entrance',lat:26.2485,lon:78.1718,cat:'campus'},
       {id:2,name:'Library',addr:'Central Library',lat:26.2495,lon:78.1738,cat:'campus'},
       {id:3,name:'Academic Block',addr:'Lecture Halls',lat:26.2505,lon:78.1727,cat:'campus'},
     ];
-    customLocations=defaults;
-    saveLocs();
-    renderLocList();
-    setTimeout(renderLocMarkers,1500);
+    saveLocs();renderLocList();
+    setTimeout(renderLocMarkers,1200);
   }
 
-  // Refresh data every 5min
-  setInterval(()=>fetchEnv(userLat||DEFAULT[0],userLon||DEFAULT[1]),5*60*1000);
-
-  map.on('click',()=>{
-    document.getElementById('mainSuggest').classList.remove('show');
-    document.getElementById('fromSuggest').classList.remove('show');
-    document.getElementById('toSuggest').classList.remove('show');
+  // Tap sheet handle area to expand
+  document.getElementById('sheetHandle').addEventListener('click',()=>{
+    if(sheetState==='peek'){sheetState='half';}
+    else if(sheetState==='half'){sheetState='full';}
+    else{sheetState='peek';}
+    applySheet();
   });
 
-  toast('🌿 EcoRoute v2 — Real sensor data loaded','success');
-  setTimeout(()=>toast('📊 Decibel CSV: 485 GPS points · AQI CSV: 990 readings','info'),2000);
-  setTimeout(()=>toast('💡 Set your health profile for smarter routes','info'),4500);
+  setTimeout(()=>fetchEnv(22.7196,75.8577),800);
+  setInterval(()=>fetchEnv(userLat||22.7196,userLon||75.8577),5*60*1000);
+
+  toast('🌿 EcoRoute — tap the sheet to explore','success');
+  setTimeout(()=>toast('📊 Real CSV sensor data loaded','info'),2200);
 });
 </script>
 </body>
