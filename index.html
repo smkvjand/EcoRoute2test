@@ -34,6 +34,9 @@
   --tertiary-dim:     #a30709;
   --tertiary-cont:    #ff9384;
   --on-tertiary-cont: #690002;
+  --pollen:           #7c3aed;
+  --pollen-cont:      #ede9fe;
+  --on-pollen-cont:   #4c1d95;
   --error:            #b02500;
   --error-cont:       #f95630;
   --r: 1rem;
@@ -127,6 +130,7 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
   transition: all .15s; font-size: 18px;
 }
 .layer-btn.on { background: var(--primary); color: #fff; }
+.layer-btn.on-pollen { background: var(--pollen); color: #fff; }
 .layer-btn:active { transform: scale(0.92); }
 
 /* ─── BOTTOM SHEET ─── */
@@ -146,7 +150,31 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
 .sheet-half  { transform: translateY(calc(100% - 55dvh)); }
 .sheet-full  { transform: translateY(0); }
 
-.sheet-handle { width: 36px; height: 4px; background: var(--outline-var); border-radius: 99px; margin: 12px auto 0; flex-shrink: 0; cursor: grab; }
+/* ─── IMPROVED DRAG HANDLE ─── */
+.sheet-drag-zone {
+  /* Wide tap/drag area — full width, taller for easy grabbing */
+  width: 100%; padding: 14px 0 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  cursor: grab; flex-shrink: 0; user-select: none;
+  -webkit-user-select: none;
+  /* Visual affordance */
+  background: transparent;
+}
+.sheet-drag-zone:active { cursor: grabbing; }
+.sheet-handle { width: 40px; height: 5px; background: var(--outline-var); border-radius: 99px; transition: width .2s, background .2s; }
+.sheet-drag-zone:hover .sheet-handle,
+.sheet-drag-zone:active .sheet-handle { width: 56px; background: var(--primary); }
+/* Peek hint text */
+.sheet-peek-hint {
+  font-size: .58rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--outline); display: flex; align-items: center; gap: 4px;
+  transition: opacity .2s;
+}
+.sheet-peek-hint .material-symbols-outlined { font-size: 12px; }
+/* Hide hint when not peeking */
+.sheet-half .sheet-peek-hint,
+.sheet-full .sheet-peek-hint { opacity: 0; pointer-events: none; }
+
 .sheet-scroll { overflow-y: auto; flex: 1; padding: 0 16px 16px; -webkit-overflow-scrolling: touch; }
 .sheet-scroll::-webkit-scrollbar { display: none; }
 
@@ -163,8 +191,6 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
 .inp-dot.end { background: var(--error); }
 .inp-field { border: none; background: transparent; font-family: 'Be Vietnam Pro', sans-serif; font-size: .84rem; font-weight: 500; color: var(--on-surface); outline: none; flex: 1; min-width: 0; }
 .inp-field::placeholder { color: var(--outline); }
-.inp-connector { width: 10px; display: flex; justify-content: center; flex-shrink: 0; }
-.inp-connector-line { width: 2px; height: 14px; background: var(--outline-var); border-radius: 2px; margin: auto; }
 .inp-suggest { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface-lowest); border-radius: var(--r-lg); box-shadow: 0 8px 32px rgba(20,50,62,0.12); display: none; z-index: 300; max-height: 160px; overflow-y: auto; }
 .inp-suggest.show { display: block; }
 
@@ -229,6 +255,7 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
 .chip { font-size: .56rem; font-weight: 700; padding: 3px 9px; border-radius: var(--r-full); background: var(--primary-container); color: var(--on-primary-cont); }
 .chip.orange { background: var(--secondary-cont); color: var(--on-secondary-cont); }
 .chip.red { background: var(--tertiary-cont); color: var(--on-tertiary-cont); }
+.chip.purple { background: var(--pollen-cont); color: var(--on-pollen-cont); }
 
 /* ─── ROUTE CARDS ─── */
 .route-card {
@@ -240,7 +267,7 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
 .route-card.eco::before { background: var(--primary); }
 .route-card.fast::before { background: #2563eb; }
 .route-card.quiet::before { background: var(--secondary); }
-.route-card.lpoll::before { background: #7c3aed; }
+.route-card.lpoll::before { background: var(--pollen); }
 .route-card.on { background: var(--surface-container); box-shadow: 0 4px 20px rgba(20,50,62,0.08); transform: scale(1.01); }
 .route-card.best { border: 2px solid var(--primary); background: var(--surface-lowest); box-shadow: 0 8px 32px rgba(0,106,43,0.12); }
 .rc-badge { position: absolute; top: -1px; left: 20px; background: var(--primary); color: #fff; font-size: .52rem; font-weight: 800; padding: 2px 8px; border-radius: 0 0 6px 6px; letter-spacing: .06em; text-transform: uppercase; display: flex; align-items: center; gap: 3px; }
@@ -266,6 +293,38 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
 .rc-stat { background: var(--surface-lowest); border-radius: 10px; padding: 8px 6px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .rc-stat .material-symbols-outlined { font-size: 16px; }
 .rc-stat-lbl { font-size: .48rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--on-surface-var); text-align: center; }
+
+/* ─── POLLEN PANEL ─── */
+.pollen-card {
+  background: linear-gradient(135deg, rgba(237,233,254,0.6) 0%, rgba(203,237,255,0.4) 100%);
+  border-radius: var(--r-lg); padding: 14px; margin-bottom: 10px;
+  border: 1px solid rgba(124,58,237,0.15);
+}
+.pollen-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.pollen-title { font-family: 'Plus Jakarta Sans',sans-serif; font-size: .88rem; font-weight: 800; color: var(--on-surface); display: flex; align-items: center; gap: 7px; }
+.pollen-live { display: flex; align-items: center; gap: 5px; font-size: .56rem; font-weight: 700; color: var(--pollen); text-transform: uppercase; letter-spacing: .07em; }
+.pollen-dot { width: 6px; height: 6px; background: var(--pollen); border-radius: 50%; animation: blink 2s ease-in-out infinite; }
+.pollen-meters { display: flex; flex-direction: column; gap: 8px; }
+.pollen-meter { display: flex; align-items: center; gap: 10px; }
+.pollen-icon { font-size: 18px; flex-shrink: 0; }
+.pollen-info { flex: 1; }
+.pollen-name { font-size: .72rem; font-weight: 700; color: var(--on-surface); }
+.pollen-track { height: 6px; background: rgba(124,58,237,0.12); border-radius: 99px; overflow: hidden; margin-top: 4px; }
+.pollen-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
+.pollen-val { font-family: 'Plus Jakarta Sans',sans-serif; font-size: .8rem; font-weight: 800; flex-shrink: 0; min-width: 36px; text-align: right; }
+.pollen-badge { font-size: .5rem; font-weight: 700; padding: 2px 7px; border-radius: var(--r-full); flex-shrink: 0; }
+.pb-low { background: var(--primary-container); color: var(--on-primary-cont); }
+.pb-mod { background: var(--secondary-cont); color: var(--on-secondary-cont); }
+.pb-high { background: var(--pollen-cont); color: var(--on-pollen-cont); }
+.pb-vhi { background: var(--tertiary-cont); color: var(--on-tertiary-cont); }
+.pollen-forecast { display: grid; grid-template-columns: repeat(5,1fr); gap: 4px; margin-top: 12px; }
+.pf-day { background: rgba(255,255,255,0.6); border-radius: 10px; padding: 8px 4px; text-align: center; }
+.pf-day-lbl { font-size: .5rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--outline); margin-bottom: 5px; }
+.pf-bar-wrap { height: 36px; display: flex; align-items: flex-end; justify-content: center; }
+.pf-bar { width: 10px; border-radius: 4px 4px 0 0; transition: height .8s ease; }
+.pf-val { font-size: .52rem; font-weight: 800; color: var(--on-surface); margin-top: 4px; }
+.pollen-alert { background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.2); border-radius: 12px; padding: 10px 12px; margin-top: 10px; font-size: .68rem; color: var(--on-surface-var); line-height: 1.5; display: flex; align-items: flex-start; gap: 8px; }
+.pollen-alert .material-symbols-outlined { font-size: 16px; color: var(--pollen); flex-shrink: 0; margin-top: 1px; }
 
 /* ─── HEALTH PANEL ─── */
 .health-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -334,6 +393,7 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
 .env-float-icon.ok { background: rgba(134,248,152,0.3); color: var(--primary); }
 .env-float-icon.warn { background: rgba(255,202,83,0.3); color: var(--secondary); }
 .env-float-icon.bad { background: rgba(255,147,132,0.3); color: var(--tertiary); }
+.env-float-icon.pollen { background: rgba(124,58,237,0.12); color: var(--pollen); }
 .env-float-txt { flex: 1; }
 .env-float-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: .82rem; font-weight: 800; color: var(--on-surface); }
 .env-float-sub { font-size: .66rem; color: var(--on-surface-var); margin-top: 1px; }
@@ -424,6 +484,7 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
 .badge-g { background: var(--primary-container); color: var(--on-primary-cont); }
 .badge-m { background: var(--secondary-cont); color: var(--on-secondary-cont); }
 .badge-h { background: var(--tertiary-cont); color: var(--on-tertiary-cont); }
+.badge-p { background: var(--pollen-cont); color: var(--on-pollen-cont); }
 .metric-val { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.3rem; font-weight: 900; color: var(--on-surface); }
 .metric-unit { font-size: .62rem; font-weight: 600; color: var(--on-surface-var); }
 .metric-bar { height: 3px; background: var(--surface-container); border-radius: 99px; overflow: hidden; margin-top: 8px; }
@@ -434,6 +495,8 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-row { display: flex; align-items: center; gap: 8px; padding: 10px; font-size: .74rem; color: var(--outline); justify-content: center; }
 .no-routes { text-align: center; padding: 20px; font-size: .78rem; color: var(--on-surface-var); background: var(--surface-low); border-radius: 14px; }
+
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 </style>
 </head>
 <body>
@@ -462,8 +525,9 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
     <div class="eco-ring-sub" id="ecoRingSub">SCORE</div>
   </div>
   <div class="layer-btns">
-    <button class="layer-btn on" id="lAqi" onclick="toggleLayer('aqi')" title="AQI"><span class="material-symbols-outlined" style="font-size:18px">air</span></button>
-    <button class="layer-btn" id="lNoise" onclick="toggleLayer('noise')" title="Noise"><span class="material-symbols-outlined" style="font-size:18px">volume_up</span></button>
+    <button class="layer-btn on" id="lAqi" onclick="toggleLayer('aqi')" title="AQI Heatmap"><span class="material-symbols-outlined" style="font-size:18px">air</span></button>
+    <button class="layer-btn" id="lNoise" onclick="toggleLayer('noise')" title="Noise Heatmap"><span class="material-symbols-outlined" style="font-size:18px">volume_up</span></button>
+    <button class="layer-btn" id="lPollen" onclick="toggleLayer('pollen')" title="Pollen Heatmap"><span class="material-symbols-outlined" style="font-size:18px">local_florist</span></button>
     <button class="layer-btn" id="lPins" onclick="togglePinLayer()" title="Places"><span class="material-symbols-outlined" style="font-size:18px">pin_drop</span></button>
   </div>
 </div>
@@ -503,21 +567,30 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
 </div>
 
 <!-- BOTTOM SHEET -->
-<div class="bottom-sheet sheet-peek" id="sheet" id="bottomSheet">
-  <div class="sheet-handle" id="sheetHandle"></div>
+<div class="bottom-sheet sheet-peek" id="sheet">
+
+  <!-- IMPROVED DRAG ZONE — full width, tall, easy to grab -->
+  <div class="sheet-drag-zone" id="sheetDragZone">
+    <div class="sheet-handle"></div>
+    <div class="sheet-peek-hint">
+      <span class="material-symbols-outlined">keyboard_arrow_up</span>
+      Swipe up to explore
+    </div>
+  </div>
+
   <div class="sheet-scroll">
 
     <!-- TABS -->
-    <div class="sheet-tabs" style="margin-top:12px">
+    <div class="sheet-tabs">
       <button class="sheet-tab on" id="tab-route" onclick="showTab('route')">Route</button>
       <button class="sheet-tab" id="tab-health" onclick="showTab('health')">Health</button>
       <button class="sheet-tab" id="tab-env"    onclick="showTab('env')">Air</button>
+      <button class="sheet-tab" id="tab-pollen" onclick="showTab('pollen')">🌿 Pollen</button>
       <button class="sheet-tab" id="tab-places" onclick="showTab('places')">Places</button>
     </div>
 
     <!-- ROUTE PANE -->
     <div class="pane on" id="pane-route">
-      <!-- Inputs -->
       <div class="route-inputs">
         <div class="inp-row" id="fromRow">
           <div class="inp-dot start"></div>
@@ -533,7 +606,6 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
         <button class="find-btn" onclick="findRoutes()"><span class="material-symbols-outlined">near_me</span>Find Eco Routes</button>
       </div>
 
-      <!-- Travel Mode -->
       <div class="sec-label">Travel Mode</div>
       <div class="mode-row">
         <button class="mode-btn on" onclick="setMode(this,'walk')"><span class="material-symbols-outlined">directions_walk</span>Walk</button>
@@ -542,13 +614,11 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
         <button class="mode-btn" onclick="setMode(this,'car')"><span class="material-symbols-outlined">directions_car</span>Drive</button>
       </div>
 
-      <!-- Preferences -->
       <div class="sec-label">Route Preferences</div>
       <div class="toggle-row"><div class="toggle-info"><h4>Avoid High AQI Zones</h4><p>Prefer cleaner air paths</p></div><label class="sw"><input type="checkbox" id="tAqi" checked onchange="reRank()"/><div class="sw-track"></div><div class="sw-knob"></div></label></div>
       <div class="toggle-row"><div class="toggle-info"><h4>Avoid Noisy Roads</h4><p>Prefer quieter streets</p></div><label class="sw"><input type="checkbox" id="tNoise" checked onchange="reRank()"/><div class="sw-track"></div><div class="sw-knob"></div></label></div>
-      <div class="toggle-row"><div class="toggle-info"><h4>Avoid Pollen Zones</h4><p>For allergy sufferers</p></div><label class="sw"><input type="checkbox" id="tPollen" onchange="reRank()"/><div class="sw-track"></div><div class="sw-knob"></div></label></div>
+      <div class="toggle-row"><div class="toggle-info"><h4>Avoid High Pollen Zones</h4><p>Routes through lower pollen areas</p></div><label class="sw"><input type="checkbox" id="tPollen" onchange="reRank()"/><div class="sw-track"></div><div class="sw-knob"></div></label></div>
 
-      <!-- Eco Score -->
       <div class="sec-label">Eco Score</div>
       <div class="score-card">
         <div class="score-ring">
@@ -561,14 +631,16 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
         <div class="score-info">
           <div class="score-title" id="scoreLbl">Loading…</div>
           <div class="score-sub" id="scoreSub">Fetching data</div>
-          <div class="score-chips"><span class="chip" id="chipAqi">AQI —</span><span class="chip orange" id="chipPollen">Pollen —</span></div>
+          <div class="score-chips">
+            <span class="chip" id="chipAqi">AQI —</span>
+            <span class="chip orange" id="chipPollen">Pollen —</span>
+            <span class="chip purple" id="chipPollenType">— species</span>
+          </div>
         </div>
       </div>
 
-      <!-- Routes -->
       <div class="sec-label">Routes</div>
       <div id="routeList"><div class="no-routes">Enter a destination and tap <b>Find Eco Routes</b></div></div>
-
       <button class="nav-start" id="navBtn" onclick="toggleNav()"><span class="material-symbols-outlined">near_me</span>Start Navigation</button>
     </div>
 
@@ -593,20 +665,17 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
       <div class="health-info-box" id="healthHint" style="margin-top:8px">Set your profile to see route adjustments.</div>
     </div>
 
-    <!-- ENV PANE -->
+    <!-- ENV (AIR) PANE -->
     <div class="pane" id="pane-env">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
         <div style="width:8px;height:8px;background:var(--primary);border-radius:50%;box-shadow:0 0 5px rgba(0,106,43,.4);animation:blink 2s ease-in-out infinite"></div>
         <span style="font-size:.62rem;font-weight:700;color:var(--outline);text-transform:uppercase;letter-spacing:.08em">Live CSV Sensor Data</span>
       </div>
-      @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
       <div id="envLoading" class="loading-row"><div class="spin"></div>Loading sensor data…</div>
       <div class="metric-grid" id="metricGrid" style="display:none">
         <div class="metric-card"><div class="metric-top"><span class="metric-icon">🌫️</span><span class="metric-badge" id="bAqi">—</span></div><div class="metric-val" id="mAqi">—</div><div class="metric-unit">AQI (US)</div><div class="metric-bar"><div class="metric-bar-fill" id="bAqiBar" style="width:0%"></div></div></div>
         <div class="metric-card"><div class="metric-top"><span class="metric-icon">💨</span><span class="metric-badge" id="bPm25">—</span></div><div class="metric-val" id="mPm25">—</div><div class="metric-unit">PM2.5 μg/m³</div><div class="metric-bar"><div class="metric-bar-fill" id="bPm25Bar" style="width:0%"></div></div></div>
         <div class="metric-card"><div class="metric-top"><span class="metric-icon">🔊</span><span class="metric-badge badge-g" id="bNs">CSV</span></div><div class="metric-val" id="mNoise">68</div><div class="metric-unit">Noise dB</div><div class="metric-bar"><div class="metric-bar-fill" id="bNsBar" style="width:55%;background:#765600"></div></div></div>
-        <div class="metric-card"><div class="metric-top"><span class="metric-icon">🌿</span><span class="metric-badge" id="bGrass">—</span></div><div class="metric-val" id="mGrass">—</div><div class="metric-unit">Grass Pollen</div><div class="metric-bar"><div class="metric-bar-fill" id="bGrassBar" style="width:0%;background:#7c3aed"></div></div></div>
-        <div class="metric-card"><div class="metric-top"><span class="metric-icon">🌳</span><span class="metric-badge" id="bTree">—</span></div><div class="metric-val" id="mTree">—</div><div class="metric-unit">Tree Pollen</div><div class="metric-bar"><div class="metric-bar-fill" id="bTreeBar" style="width:0%;background:#7c3aed"></div></div></div>
         <div class="metric-card"><div class="metric-top"><span class="metric-icon">☀️</span><span class="metric-badge badge-m">UV</span></div><div class="metric-val" id="mUv">—</div><div class="metric-unit">UV Index</div><div class="metric-bar"><div class="metric-bar-fill" id="bUvBar" style="width:0%;background:#765600"></div></div></div>
       </div>
       <div class="sec-label" style="margin-top:16px">Your Data</div>
@@ -617,6 +686,47 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
       <div style="background:var(--surface-low);border-radius:14px;padding:12px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><div style="width:8px;height:8px;border-radius:50%;background:var(--secondary)"></div><span style="font-size:.76rem;font-weight:700">Decibel CSVs — Campus</span></div>
         <div style="font-size:.66rem;color:var(--on-surface-var)">26.24°N 78.17°E · 56–82 dB · 485 GPS points · 6 files</div>
+      </div>
+    </div>
+
+    <!-- POLLEN PANE -->
+    <div class="pane" id="pane-pollen">
+      <!-- Live pollen card -->
+      <div class="pollen-card">
+        <div class="pollen-header">
+          <div class="pollen-title">
+            🌿 Pollen Report
+          </div>
+          <div class="pollen-live"><div class="pollen-dot"></div>Live</div>
+        </div>
+        <div class="pollen-meters" id="pollenMeters">
+          <div class="loading-row"><div class="spin"></div>Loading pollen data…</div>
+        </div>
+      </div>
+
+      <!-- 5-day forecast bars -->
+      <div class="sec-label">5-Day Pollen Forecast</div>
+      <div class="pollen-forecast" id="pollenForecast">
+        <!-- filled by JS -->
+      </div>
+
+      <!-- Alert / advice -->
+      <div class="pollen-alert" id="pollenAlert">
+        <span class="material-symbols-outlined">info</span>
+        <span id="pollenAlertText">Loading pollen advice…</span>
+      </div>
+
+      <!-- Heatmap toggle shortcut -->
+      <div class="sec-label">Map Layer</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="enablePollenLayer()" style="flex:1;padding:11px;border:none;border-radius:12px;background:var(--pollen-cont);color:var(--on-pollen-cont);font-family:'Plus Jakarta Sans',sans-serif;font-size:.76rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s"><span class="material-symbols-outlined" style="font-size:16px">layers</span>Show Pollen Map</button>
+        <button onclick="showTab('route')" style="flex:1;padding:11px;border:none;border-radius:12px;background:var(--primary-container);color:var(--on-primary-cont);font-family:'Plus Jakarta Sans',sans-serif;font-size:.76rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s"><span class="material-symbols-outlined" style="font-size:16px">alt_route</span>Low-Pollen Route</button>
+      </div>
+
+      <!-- Advice for conditions -->
+      <div class="sec-label" style="margin-top:16px">Outdoor Tips</div>
+      <div id="pollenTips" style="display:flex;flex-direction:column;gap:8px">
+        <!-- filled by JS -->
       </div>
     </div>
 
@@ -663,13 +773,13 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
   <div class="bnav-fab" onclick="locateMe()">
     <span class="material-symbols-outlined filled">explore</span>
   </div>
+  <div class="bnav-item" id="bnav-pollen" onclick="showTab('pollen');setActiveNav('pollen')">
+    <span class="material-symbols-outlined">local_florist</span>
+    <span class="bnav-lbl">Pollen</span>
+  </div>
   <div class="bnav-item" id="bnav-env" onclick="showTab('env');setActiveNav('env')">
     <span class="material-symbols-outlined">air</span>
     <span class="bnav-lbl">Air</span>
-  </div>
-  <div class="bnav-item" id="bnav-places" onclick="showTab('places');setActiveNav('places')">
-    <span class="material-symbols-outlined">pin_drop</span>
-    <span class="bnav-lbl">Places</span>
   </div>
 </nav>
 
@@ -678,7 +788,7 @@ h1, h2, h3, h4, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script>
-// ═══════════ REAL DECIBEL DATA (GPS-tagged) ═══════════
+// ═══════════ REAL DECIBEL DATA ═══════════
 const DECIBEL_DATA=[[26.251104,78.172547,76.5],[26.251103,78.172548,75.6],[26.251104,78.172627,73.1],[26.251046,78.172672,68.8],[26.251131,78.172719,67.7],[26.250972,78.172811,65.7],[26.251145,78.173066,65.8],[26.25113,78.173102,66.0],[26.251123,78.173075,67.1],[26.251132,78.173047,67.9],[26.251161,78.173035,67.0],[26.251162,78.172952,67.0],[26.251105,78.172909,69.4],[26.251004,78.172687,71.2],[26.250902,78.172603,74.4],[26.25095,78.172553,73.6],[26.250899,78.172571,71.7],[26.250897,78.172682,71.1],[26.250923,78.172784,70.4],[26.250923,78.172837,69.7],[26.250849,78.172949,68.4],[26.250757,78.173037,71.1],[26.250749,78.173128,73.6],[26.250717,78.173158,72.7],[26.25072,78.173149,71.0],[26.250756,78.173165,70.0],[26.250746,78.173165,68.1],[26.250774,78.173079,67.5],[26.250659,78.17314,67.0],[26.250602,78.173122,67.9],[26.250578,78.173114,67.9],[26.250488,78.173151,68.9],[26.250456,78.17319,68.4],[26.25047,78.173287,66.3],[26.250438,78.17333,66.7],[26.250435,78.173417,66.2],[26.250338,78.173419,66.1],[26.250269,78.173341,67.0],[26.250462,78.173508,67.2],[26.250444,78.173565,70.8],[26.250399,78.17358,72.7],[26.250343,78.173643,73.9],[26.250249,78.173713,73.9],[26.250158,78.17378,72.8],[26.250124,78.173805,75.0],[26.2501,78.17384,77.6],[26.25007,78.173844,79.5],[26.249998,78.173864,78.7],[26.249966,78.173885,77.5],[26.249925,78.173893,76.6],[26.249868,78.173893,77.1],[26.249774,78.173865,78.1],[26.249754,78.17387,78.1],[26.249722,78.173917,81.0],[26.249677,78.173948,81.2],[26.249654,78.173957,80.9],[26.24961,78.173969,78.8],[26.249524,78.174054,77.5],[26.249466,78.174106,77.1],[26.24945,78.17412,77.8],[26.249373,78.174147,77.8],[26.249324,78.174154,74.2],[26.249253,78.174244,72.2],[26.249234,78.174213,76.6],[26.249356,78.174162,78.3],[26.249385,78.174154,75.2],[26.249465,78.173966,75.1],[26.249445,78.173607,77.3],[26.249433,78.173566,77.3],[26.249338,78.173196,73.3],[26.249325,78.17312,75.2],[26.2493,78.17303,73.1],[26.249283,78.172981,72.3],[26.249233,78.172878,71.9],[26.249233,78.17282,73.5],[26.249223,78.172771,73.5],[26.249215,78.172771,70.6],[26.247981,78.17751,66.7],[26.247976,78.17764,65.0],[26.247978,78.177742,63.6],[26.247988,78.17778,63.5],[26.247994,78.177812,62.8],[26.247982,78.177822,63.1],[26.247977,78.177773,63.5],[26.24799,78.177439,62.6],[26.247989,78.177481,62.0],[26.247975,78.177541,62.0],[26.247993,78.177342,61.7],[26.247996,78.177295,60.8],[26.247992,78.177204,60.3],[26.248012,78.177169,60.1],[26.248097,78.177151,60.1],[26.248216,78.177157,59.6],[26.248312,78.177149,59.6],[26.248412,78.177169,59.7],[26.248514,78.177247,61.2],[26.248523,78.177297,61.7],[26.248472,78.177408,61.3],[26.248324,78.177562,62.1],[26.248292,78.177609,65.6],[26.248245,78.177732,56.7],[26.248139,78.177893,63.6],[26.24812,78.177906,65.2],[26.248109,78.178065,67.5],[26.248114,78.178199,66.5],[26.248209,78.178397,66.0],[26.248192,78.178585,65.5],[26.248212,78.17875,64.3],[26.248203,78.178819,63.7],[26.248054,78.179224,67.6],[26.248031,78.179288,68.5],[26.247988,78.179328,70.6],[26.247958,78.179269,71.0],[26.247971,78.179135,70.1],[26.248065,78.179026,67.2],[26.247647,78.174558,70.2],[26.247635,78.17443,68.5],[26.247552,78.173864,72.3],[26.247541,78.173798,73.0],[26.247562,78.173616,76.2],[26.247566,78.17358,76.0],[26.247574,78.173541,74.8],[26.247587,78.173504,72.0],[26.247647,78.17297,81.9],[26.24766,78.172949,81.4],[26.247716,78.172925,80.6],[26.247751,78.172873,79.5],[26.247774,78.172829,78.3],[26.247806,78.172740,73.8],[26.247837,78.172699,73.0],[26.247847,78.172615,71.1],[26.247867,78.172559,69.4],[26.247905,78.172517,67.7],[26.247984,78.172448,66.1],[26.248199,78.172228,62.2],[26.248272,78.172149,62.3],[26.248331,78.172112,62.6],[26.248604,78.171934,63.8],[26.248749,78.171871,65.6],[26.248945,78.171822,67.2],[26.249076,78.171717,66.8],[26.249276,78.171686,68.3],[26.249324,78.171666,69.5],[26.249477,78.171664,71.0],[26.249647,78.171597,70.5],[26.249783,78.171559,68.8],[26.249915,78.171595,67.8],[26.250043,78.171506,68.1],[26.250169,78.171337,65.2],[26.246868,78.177555,65.8],[26.246874,78.177553,66.4],[26.246941,78.177582,64.5],[26.247004,78.177573,63.5],[26.247055,78.177481,61.3],[26.247065,78.177262,59.3],[26.247081,78.177180,59.7],[26.247277,78.177088,62.0],[26.250016,78.171222,79.5],[26.249982,78.171119,77.8],[26.249846,78.170957,76.2],[26.249832,78.170694,71.1],[26.24989,78.170472,69.8],[26.249978,78.170362,71.5],[26.250049,78.170367,71.1],[26.250151,78.170282,71.0]];
 const AQI_CSV={avg:60.3,max:283};
 
@@ -687,60 +797,85 @@ let map, userLat, userLon;
 let fromLat, fromLon, fromName, toLat, toLon, toName;
 let travelMode='foot', navOn=false;
 let rLayers=[], hLayers={}, routeData=[];
-let env={aqi:null,pm25:null,grass:null,tree:null,uv:null,noise:68};
+let env={aqi:null,pm25:null,grass:null,tree:null,weed:null,uv:null,noise:68};
+let pollenForecastData=[];
 let currentLocName='Location';
 let customLocations=JSON.parse(localStorage.getItem('eco_locs')||'[]');
 let locMarkers=[], pinsVisible=true;
 let pinDropMode=false;
 let healthProfile='none', conditions=new Set(), catFilter='all';
-let sheetState='peek'; // peek | half | full
-let startY=0, startOffset=0, isDragging=false;
+let sheetState='peek';
 
-const SHEET_OFFSETS={peek:'calc(100% - 260px)',half:'calc(100% - 55dvh)',full:'0px'};
-
-// ═══════════ SHEET DRAG ═══════════
+// ═══════════ IMPROVED SHEET DRAG ═══════════
 (function(){
   const sheet=document.getElementById('sheet');
-  const handle=document.getElementById('sheetHandle');
-  const STATES=['peek','half','full'];
-  let startY=0,startT=0,curOffset=0;
+  const dragZone=document.getElementById('sheetDragZone');
+  let startY=0, startT=0, startOffset=0, dragging=false;
 
-  function getOffset(){return parseFloat(sheet.style.transform?.replace('translateY(',''))||0;}
+  function getTranslateY(){
+    const t=sheet.style.transform;
+    if(!t||t==='none')return 0;
+    const m=t.match(/translateY\(([^)]+)px\)/);
+    return m?parseFloat(m[1]):0;
+  }
 
-  handle.addEventListener('touchstart',e=>{
-    startY=e.touches[0].clientY;
-    startT=Date.now();
-    sheet.style.transition='none';
-  },{passive:true});
-  handle.addEventListener('touchmove',e=>{
-    const dy=e.touches[0].clientY-startY;
+  function getCurrentBase(){
     const h=window.innerHeight;
-    const base=sheetState==='peek'?h-260:sheetState==='half'?h*0.45:0;
-    const newY=Math.max(0,Math.min(h-60,base+dy));
-    sheet.style.transform=`translateY(${newY}px)`;
-  },{passive:true});
-  handle.addEventListener('touchend',e=>{
+    if(sheetState==='peek')return h-260;
+    if(sheetState==='half')return Math.round(h*0.45);
+    return 0;
+  }
+
+  function onStart(clientY){
+    startY=clientY; startT=Date.now();
+    startOffset=getCurrentBase();
+    sheet.style.transition='none';
+    dragging=true;
+  }
+  function onMove(clientY){
+    if(!dragging)return;
+    const dy=clientY-startY;
+    const h=window.innerHeight;
+    const ny=Math.max(0,Math.min(h-80,startOffset+dy));
+    sheet.style.transform=`translateY(${ny}px)`;
+  }
+  function onEnd(clientY){
+    if(!dragging)return; dragging=false;
     sheet.style.transition='';
-    const dy=e.changedTouches[0].clientY-startY;
+    const dy=clientY-startY;
     const dt=Date.now()-startT;
-    if(Math.abs(dy)<10) return;
-    if(dy<-30){
+    const vel=Math.abs(dy)/Math.max(dt,1)*1000; // px/sec
+
+    if(Math.abs(dy)<8 && dt<300){
+      // Tap — cycle state
+      sheetState=sheetState==='peek'?'half':sheetState==='half'?'full':'peek';
+    } else if(dy<-30||vel>300&&dy<0){
       sheetState=sheetState==='peek'?'half':sheetState==='half'?'full':'full';
-    } else if(dy>30){
+    } else if(dy>30||vel>300&&dy>0){
       sheetState=sheetState==='full'?'half':sheetState==='half'?'peek':'peek';
     }
     applySheet();
-  },{passive:true});
+  }
+
+  // Touch
+  dragZone.addEventListener('touchstart',e=>{onStart(e.touches[0].clientY);},{passive:true});
+  dragZone.addEventListener('touchmove',e=>{onMove(e.touches[0].clientY);},{passive:true});
+  dragZone.addEventListener('touchend',e=>{onEnd(e.changedTouches[0].clientY);},{passive:true});
+
+  // Mouse (desktop)
+  dragZone.addEventListener('mousedown',e=>{
+    onStart(e.clientY);
+    const mv=ee=>onMove(ee.clientY);
+    const up=ee=>{onEnd(ee.clientY);window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);};
+    window.addEventListener('mousemove',mv);
+    window.addEventListener('mouseup',up);
+    e.preventDefault();
+  });
 })();
 
 function applySheet(){
   const sheet=document.getElementById('sheet');
   sheet.className='bottom-sheet sheet-'+sheetState;
-}
-
-function expandSheet(){
-  sheetState=sheetState==='peek'?'half':'full';
-  applySheet();
 }
 
 // ═══════════ MAP ═══════════
@@ -755,12 +890,11 @@ function initMap(){
       userLat=p.coords.latitude; userLon=p.coords.longitude;
       currentLocName='Your Location';
       map.setView([userLat,userLon],14);
-      L.circleMarker([userLat,userLon],{radius:8,color:getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),fillColor:'#006a2b',fillOpacity:.9,weight:3,fillOpacity:0.8}).addTo(map).bindPopup('📍 You are here');
+      L.circleMarker([userLat,userLon],{radius:8,color:'#006a2b',fillColor:'#006a2b',fillOpacity:.9,weight:3}).addTo(map).bindPopup('📍 You are here');
       fetchEnv(userLat,userLon);
     },()=>fetchEnv(...DEFAULT));
   } else { fetchEnv(...DEFAULT); }
 
-  // Build noise heatmap from CSV data
   buildNoiseHeat();
   renderLocMarkers();
 
@@ -778,7 +912,8 @@ function initMap(){
 function buildNoiseHeat(){
   const mn=56,mx=82;
   const pts=DECIBEL_DATA.map(r=>[r[0],r[1],(r[2]-mn)/(mx-mn)]);
-  hLayers.noise=L.heatLayer(pts,{radius:22,blur:16,maxZoom:18,minOpacity:0.35,max:1,gradient:{0:'rgba(118,86,0,0)',0.3:'rgba(255,202,83,0.7)',0.6:'rgba(180,26,20,0.85)',1:'rgba(176,37,0,1)'}});
+  hLayers.noise=L.heatLayer(pts,{radius:22,blur:16,maxZoom:18,minOpacity:0.35,max:1,
+    gradient:{0:'rgba(118,86,0,0)',0.3:'rgba(255,202,83,0.7)',0.6:'rgba(180,26,20,0.85)',1:'rgba(176,37,0,1)'}});
 }
 
 // ═══════════ GEOCODING ═══════════
@@ -820,16 +955,8 @@ function flyTo(lat,lon,name){
 }
 
 let fromT=null,toT=null;
-function onFromSearch(v){
-  clearTimeout(fromT);
-  if(v.length<3){document.getElementById('fromSuggest').classList.remove('show');return;}
-  fromT=setTimeout(async()=>{renderSuggest('fromSuggest',await geocode(v),'setFrom');},350);
-}
-function onToSearch(v){
-  clearTimeout(toT);
-  if(v.length<3){document.getElementById('toSuggest').classList.remove('show');return;}
-  toT=setTimeout(async()=>{renderSuggest('toSuggest',await geocode(v),'setTo');},350);
-}
+function onFromSearch(v){clearTimeout(fromT);if(v.length<3){document.getElementById('fromSuggest').classList.remove('show');return;}fromT=setTimeout(async()=>{renderSuggest('fromSuggest',await geocode(v),'setFrom');},350);}
+function onToSearch(v){clearTimeout(toT);if(v.length<3){document.getElementById('toSuggest').classList.remove('show');return;}toT=setTimeout(async()=>{renderSuggest('toSuggest',await geocode(v),'setTo');},350);}
 function setFrom(lat,lon,name){fromLat=parseFloat(lat);fromLon=parseFloat(lon);fromName=name;document.getElementById('fromInput').value=name.slice(0,50);document.getElementById('fromSuggest').classList.remove('show');document.getElementById('fromRow').classList.remove('focus-in');}
 function setTo(lat,lon,name){toLat=parseFloat(lat);toLon=parseFloat(lon);toName=name;document.getElementById('toInput').value=name.slice(0,50);document.getElementById('toSuggest').classList.remove('show');document.getElementById('toRow').classList.remove('focus-in');}
 function blurFrom(){setTimeout(()=>{document.getElementById('fromSuggest').classList.remove('show');document.getElementById('fromRow').classList.remove('focus-in');},200);}
@@ -838,7 +965,6 @@ function closeSuggests(){['mainSuggest','fromSuggest','toSuggest'].forEach(id=>d
 
 // ═══════════ ROUTING ═══════════
 const PROFILES={walk:'foot',bike:'bike',bus:'driving',car:'driving'};
-
 async function findRoutes(){
   let fLat=fromLat,fLon=fromLon;
   if(!fLat&&userLat){fLat=userLat;fLon=userLon;document.getElementById('fromInput').value='My Location';}
@@ -866,8 +992,7 @@ async function findRoutes(){
     rLayers.forEach(l=>map.removeLayer(l));
     rLayers=[];routeData=[];
 
-    const base=d.routes[0];
-    const alt=d.routes[1];
+    const base=d.routes[0],alt=d.routes[1];
     const bCoords=decode(base),bDist=(base.distance/1000),bDur=Math.round(base.duration/60);
 
     const variants=[
@@ -877,9 +1002,8 @@ async function findRoutes(){
       {label:'Best Eco Route',icon:'eco',type:'eco',color:'#006a2b',coords:alt?detour(decode(alt),.001):detour(bCoords,.0015),dist:bDist*1.12,dur:bDur+Math.round(bDur*.15)},
     ];
 
-    variants.forEach(v=>{ v.score=scoreRoute(v.coords); v.dist=typeof v.dist==='number'?v.dist.toFixed(1):v.dist; });
+    variants.forEach(v=>{v.score=scoreRoute(v.coords);v.dist=typeof v.dist==='number'?v.dist.toFixed(1):v.dist;});
 
-    // Draw routes
     [...variants].reverse().forEach((v,ri)=>{
       const idx=variants.length-1-ri;
       const pl=L.polyline(v.coords,{color:v.color,weight:idx===variants.length-1?5:3,opacity:idx===variants.length-1?.95:.38,dashArray:v.type==='fast'&&idx!==variants.length-1?'8,5':null}).addTo(map);
@@ -888,7 +1012,7 @@ async function findRoutes(){
       routeData.push(v);
     });
 
-    if(rLayers.length) map.fitBounds(rLayers[variants.length-1].getBounds(),{padding:[60,60]});
+    if(rLayers.length)map.fitBounds(rLayers[variants.length-1].getBounds(),{padding:[60,60]});
     addPin(fLat,fLon,'#006a2b',fromName||'Start');
     addPin(tLat,tLon,'#b02500',toName||'Destination');
     await fetchEnv(tLat,tLon);
@@ -906,9 +1030,14 @@ function detour(coords,f){return coords.map((p,i)=>i<coords.length-1?[p[0]+(coor
 
 function scoreRoute(coords){
   const aqi=env.aqi??AQI_CSV.avg;
-  const grass=env.grass??2;
+  const grass=(env.grass??2)+(env.weed??1);
   const noise=env.noise??68;
-  let a=Math.max(0,100-aqi*.5), p=Math.max(0,100-grass*15), n=Math.max(0,100-(noise-50)*2.2);
+  const avoidAqi=document.getElementById('tAqi')?.checked?1:0.6;
+  const avoidNoise=document.getElementById('tNoise')?.checked?1:0.6;
+  const avoidPollen=document.getElementById('tPollen')?.checked?1:0.6;
+  let a=Math.max(0,100-aqi*.5)*avoidAqi;
+  let p=Math.max(0,100-grass*12)*avoidPollen;
+  let n=Math.max(0,100-(noise-50)*2.2)*avoidNoise;
   const hm=healthProfile==='none'?1:healthProfile==='mild'?.88:healthProfile==='moderate'?.76:.62;
   return Math.round(Math.max(10,Math.min(100,(a*.4+p*.3+n*.3)*hm)));
 }
@@ -925,13 +1054,13 @@ function renderRouteCards(){
     const sc=r.score;
     const scColor=sc>=80?'var(--primary)':sc>=60?'var(--secondary)':'var(--tertiary)';
     let tags='';
-    if(r.type==='eco') tags+='<span class="rc-tag tag-g">Best Eco</span>';
-    if(r.type==='fast') tags+='<span class="rc-tag tag-b">Fastest</span>';
-    if(r.type==='lpoll') tags+='<span class="rc-tag tag-p">Low Pollution</span>';
-    if(r.type==='quiet') tags+='<span class="rc-tag tag-y">Quiet Roads</span>';
-    if(aqi>100&&r.type!=='fast') tags+='<span class="rc-tag tag-g">AQI Safe</span>';
-    if(aqi>100&&r.type==='fast') tags+='<span class="rc-tag tag-r">AQI Zone</span>';
-    if(healthProfile!=='none'&&r.type!=='fast') tags+='<span class="rc-tag tag-g">Health-Tuned</span>';
+    if(r.type==='eco')tags+='<span class="rc-tag tag-g">Best Eco</span>';
+    if(r.type==='fast')tags+='<span class="rc-tag tag-b">Fastest</span>';
+    if(r.type==='lpoll')tags+='<span class="rc-tag tag-p">Low Pollution</span>';
+    if(r.type==='quiet')tags+='<span class="rc-tag tag-y">Quiet Roads</span>';
+    if(aqi>100&&r.type!=='fast')tags+='<span class="rc-tag tag-g">AQI Safe</span>';
+    if((env.grass??2)>2&&r.type==='eco')tags+='<span class="rc-tag tag-p">Low Pollen Path</span>';
+    if(healthProfile!=='none'&&r.type!=='fast')tags+='<span class="rc-tag tag-g">Health-Tuned</span>';
     const barW=Math.min(100,sc)+'%';
     return `<div class="route-card ${r.type}${isBest?' best':''}" onclick="selRoute(this,${i})" id="rc-${i}">
       ${isBest?`<div class="rc-badge"><span class="material-symbols-outlined">verified</span>Best Choice</div>`:''}
@@ -944,8 +1073,8 @@ function renderRouteCards(){
       </div>
       ${isBest?`<div class="rc-stats">
         <div class="rc-stat"><span class="material-symbols-outlined" style="color:var(--primary)">air</span><div class="rc-stat-lbl">AQI ${Math.round(aqi)}</div></div>
+        <div class="rc-stat"><span class="material-symbols-outlined" style="color:var(--pollen)">local_florist</span><div class="rc-stat-lbl">${(env.grass??2)<=1?'Low':((env.grass??2)<=3?'Mod':'Hi')} Pollen</div></div>
         <div class="rc-stat"><span class="material-symbols-outlined" style="color:var(--secondary)">volume_down</span><div class="rc-stat-lbl">${Math.round(env.noise??68)} dB</div></div>
-        <div class="rc-stat"><span class="material-symbols-outlined" style="color:var(--primary)">eco</span><div class="rc-stat-lbl">${env.grass<=1?'Low':env.grass<=3?'Mod':'Hi'} Pollen</div></div>
       </div>`:`<div class="rc-bar"><div class="rc-bar-fill" style="width:${barW};background:${scColor}"></div></div>`}
       <div class="rc-tags">${tags}</div>
     </div>`;
@@ -968,16 +1097,38 @@ function reRank(){
 
 // ═══════════ ENV ═══════════
 async function fetchEnv(lat,lon){
-  const url=`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5,us_aqi,grass_pollen,alder_pollen,birch_pollen,uv_index&timezone=auto&forecast_days=1`;
+  const url=`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5,us_aqi,grass_pollen,alder_pollen,birch_pollen,ragweed_pollen,uv_index&daily=grass_pollen_max,weed_pollen_max,tree_pollen_max&timezone=auto&forecast_days=7`;
   try{
     const d=await(await fetch(url)).json();
     const h=d.hourly,hr=new Date().getHours();
     const g=k=>h[k]?.[hr]??h[k]?.[0]??null;
-    env={aqi:g('us_aqi'),pm25:g('pm2_5'),grass:g('grass_pollen'),tree:Math.max(g('alder_pollen')??0,g('birch_pollen')??0),uv:g('uv_index'),noise:68};
-    updEnvUI();buildAqiHeat(lat,lon);
+    env={
+      aqi:g('us_aqi'),pm25:g('pm2_5'),
+      grass:g('grass_pollen'),
+      tree:Math.max(g('alder_pollen')??0,g('birch_pollen')??0),
+      weed:g('ragweed_pollen'),
+      uv:g('uv_index'),noise:68
+    };
+    // Build 7-day forecast
+    pollenForecastData=[];
+    const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const today=new Date();
+    for(let i=0;i<Math.min(5,(d.daily?.grass_pollen_max||[]).length);i++){
+      const dt=new Date(today);dt.setDate(today.getDate()+i);
+      pollenForecastData.push({
+        day:days[dt.getDay()],
+        grass:d.daily.grass_pollen_max?.[i]??0,
+        weed:d.daily.weed_pollen_max?.[i]??0,
+        tree:d.daily.tree_pollen_max?.[i]??0,
+      });
+    }
+    updEnvUI();buildAqiHeat(lat,lon);buildPollenHeat(lat,lon);
+    renderPollenPane();
   }catch(e){
-    env={aqi:AQI_CSV.avg,pm25:45,grass:2,tree:1,uv:8,noise:68};
-    updEnvUI();buildAqiHeat(lat,lon);
+    env={aqi:AQI_CSV.avg,pm25:45,grass:2,tree:1,weed:1,uv:8,noise:68};
+    pollenForecastData=[{day:'Today',grass:2,weed:1,tree:1},{day:'Tmrw',grass:3,weed:2,tree:1},{day:'Wed',grass:2,weed:1,tree:2},{day:'Thu',grass:4,weed:2,tree:1},{day:'Fri',grass:1,weed:1,tree:3}];
+    updEnvUI();buildAqiHeat(lat,lon);buildPollenHeat(lat,lon);
+    renderPollenPane();
     toast('Using CSV data (API offline)','warning');
   }
 }
@@ -1006,24 +1157,30 @@ function updEnvUI(){
   const nv=noise??68, nc=nv<55?'badge-g':nv<70?'badge-m':'badge-h';
   document.getElementById('bNs').textContent=nv<55?'QUIET':nv<70?'MOD':'LOUD';document.getElementById('bNs').className='metric-badge '+nc;
   setMx('mNoise',nv,'bNsBar',90,nc==='badge-g'?'var(--primary)':nc==='badge-m'?'var(--secondary)':'var(--tertiary)');
-  const[gl,gc]=lbl(grass,[1,3],['LOW','MOD','HIGH']);
-  document.getElementById('bGrass').textContent=gl;document.getElementById('bGrass').className='metric-badge '+gc;
-  setMx('mGrass',grass,'bGrassBar',5,'#7c3aed');
-  const[tl,tc]=lbl(tree,[1,3],['LOW','MOD','HIGH']);
-  document.getElementById('bTree').textContent=tl;document.getElementById('bTree').className='metric-badge '+tc;
-  setMx('mTree',tree,'bTreeBar',5,'#7c3aed');
   setMx('mUv',uv,'bUvBar',12,'#765600');
   document.getElementById('chipAqi').textContent=`AQI ${Math.round(dAqi)||'?'}`;
-  document.getElementById('chipPollen').textContent=grass<=1?'Low Pollen':grass<=3?'Mod Pollen':'High Pollen';
+  const grassV=grass??2;
+  document.getElementById('chipPollen').textContent=grassV<=1?'Low Pollen':grassV<=3?'Mod Pollen':'High Pollen';
+  // Dominant pollen type chip
+  const types=[{n:'Grass',v:grass??0},{n:'Tree',v:tree??0},{n:'Weed',v:env.weed??0}];
+  const dom=types.reduce((a,b)=>a.v>b.v?a:b);
+  document.getElementById('chipPollenType').textContent=`${dom.n} dominant`;
   updScore(null);
+  // Float alert
   const floatIcon=document.getElementById('envIcon');
   const floatTitle=document.getElementById('envTitle');
   const floatSub=document.getElementById('envSub');
+  const highPollen=grassV>3||(tree??0)>3||(env.weed??0)>3;
   if(dAqi>100){
     floatIcon.className='env-float-icon '+(dAqi>150?'bad':'warn');
     floatIcon.innerHTML=`<span class="material-symbols-outlined">warning</span>`;
     floatTitle.textContent=`AQI ${Math.round(dAqi)} — ${dAqi>150?'Hazardous':'Unhealthy'}`;
     floatSub.textContent=healthProfile!=='none'?`${healthProfile} sensitivity — eco route advised`:'Air quality poor. Eco route suggested.';
+  }else if(highPollen){
+    floatIcon.className='env-float-icon pollen';
+    floatIcon.innerHTML=`<span class="material-symbols-outlined">local_florist</span>`;
+    floatTitle.textContent=`High Pollen — ${dom.n} dominant`;
+    floatSub.textContent='Consider a low-pollen route today.';
   }else{
     floatIcon.className='env-float-icon ok';
     floatIcon.innerHTML=`<span class="material-symbols-outlined">check_circle</span>`;
@@ -1052,28 +1209,66 @@ function updScore(force){
   document.getElementById('scoreSub').textContent=`${(sc/100*3.2).toFixed(1)}kg CO₂ saved · CSV AQI ${Math.round(AQI_CSV.avg)}`;
 }
 
+// ═══════════ POLLEN HEATMAP ═══════════
+function buildPollenHeat(lat,lon){
+  const grassV=env.grass??2, treeV=env.tree??1, weedV=env.weed??1;
+  const maxVal=Math.max(grassV,treeV,weedV,0.1);
+  const pts=[];
+  // Hotspots — parks and green areas are higher pollen
+  const hotspots=[
+    {ll:[lat-.008,lon+.012],m:2.2},
+    {ll:[lat+.012,lon-.006],m:1.8},
+    {ll:[lat-.015,lon-.01],m:1.5},
+    {ll:[lat+.005,lon+.018],m:2.5},
+    {ll:[lat-.02,lon+.005],m:1.6},
+  ];
+  for(let i=0;i<120;i++){
+    const a=lat+(Math.random()-.5)*.08, b=lon+(Math.random()-.5)*.08;
+    let iv=(grassV/5)*(.3+Math.random()*.7);
+    hotspots.forEach(s=>{if(Math.hypot(a-s.ll[0],b-s.ll[1])<.015)iv=Math.min(1,iv*s.m);});
+    pts.push([a,b,Math.min(1,iv)]);
+  }
+  if(hLayers.pollen)map.removeLayer(hLayers.pollen);
+  hLayers.pollen=L.heatLayer(pts,{radius:40,blur:30,maxZoom:18,minOpacity:0.3,
+    gradient:{0:'rgba(124,58,237,0)',0.25:'rgba(124,58,237,0.4)',0.55:'rgba(237,233,254,0.7)',0.8:'rgba(124,58,237,0.9)',1:'rgba(76,29,149,1)'}});
+}
+
+function enablePollenLayer(){
+  if(hLayers.pollen){
+    if(!map.hasLayer(hLayers.pollen)){hLayers.pollen.addTo(map);}
+    document.getElementById('lPollen').classList.add('on-pollen');
+    document.getElementById('lPollen').classList.remove('on');
+    toast('🌿 Pollen layer active','info');
+    map.setView(map.getCenter(),map.getZoom()); // refresh
+  }
+}
+
 function buildAqiHeat(lat,lon){
   const aqi=env.aqi??AQI_CSV.avg;
-  const grass=env.grass??2;
   const norm=Math.min(1,aqi/150);
-  const pts=[],pPts=[];
+  const pts=[];
   const hs=[{ll:[lat-.01,lon+.01],m:1.8},{ll:[lat+.015,lon-.005],m:1.5},{ll:[lat-.02,lon+.02],m:2}];
   for(let i=0;i<90;i++){
-    const a=lat+(Math.random()-.5)*.06,b=lon+(Math.random()-.5)*.06;
+    const a=lat+(Math.random()-.5)*.06, b=lon+(Math.random()-.5)*.06;
     let iv=norm*(.4+Math.random()*.6);
     hs.forEach(s=>{if(Math.hypot(a-s.ll[0],b-s.ll[1])<.012)iv=Math.min(1,iv*s.m);});
     pts.push([a,b,Math.min(1,iv)]);
-    pPts.push([a+(Math.random()-.5)*.02,b+(Math.random()-.5)*.02,Math.min(1,(grass??2)/5*(.3+Math.random()*.7))]);
   }
-  ['aqi','pollen'].forEach(k=>{if(hLayers[k])map.removeLayer(hLayers[k]);});
-  hLayers.aqi=L.heatLayer(pts,{radius:40,blur:28,maxZoom:18,minOpacity:0.35,gradient:{0:'rgba(0,106,43,0)',0.3:'rgba(0,106,43,0.7)',0.55:'rgba(118,86,0,0.85)',0.8:'rgba(180,26,20,1)'}});
-  hLayers.pollen=L.heatLayer(pPts,{radius:45,blur:32,maxZoom:18,minOpacity:0.3,gradient:{0:'rgba(124,58,237,0)',0.35:'rgba(124,58,237,0.6)',0.7:'rgba(118,86,0,0.85)',1:'rgba(180,26,20,1)'}});
+  if(hLayers.aqi)map.removeLayer(hLayers.aqi);
+  hLayers.aqi=L.heatLayer(pts,{radius:40,blur:28,maxZoom:18,minOpacity:0.35,
+    gradient:{0:'rgba(0,106,43,0)',0.3:'rgba(0,106,43,0.7)',0.55:'rgba(118,86,0,0.85)',0.8:'rgba(180,26,20,1)'}});
   hLayers.aqi.addTo(map);
   document.getElementById('lAqi').classList.add('on');
 }
 
 function toggleLayer(id){
   const btn=document.getElementById('l'+id.charAt(0).toUpperCase()+id.slice(1));
+  if(id==='pollen'){
+    if(!hLayers.pollen)return;
+    if(map.hasLayer(hLayers.pollen)){map.removeLayer(hLayers.pollen);btn.className='layer-btn';}
+    else{hLayers.pollen.addTo(map);btn.className='layer-btn on-pollen';}
+    return;
+  }
   if(hLayers[id]){
     if(map.hasLayer(hLayers[id])){map.removeLayer(hLayers[id]);btn.classList.remove('on');}
     else{hLayers[id].addTo(map);btn.classList.add('on');}
@@ -1085,6 +1280,82 @@ function togglePinLayer(){
   document.getElementById('lPins').classList.toggle('on',pinsVisible);
 }
 
+// ═══════════ POLLEN PANE ═══════════
+function pollenLevel(v){
+  if(v==null||v===0)return{lbl:'None',cls:'pb-low',col:'var(--primary)'};
+  if(v<=1)return{lbl:'Low',cls:'pb-low',col:'var(--primary)'};
+  if(v<=3)return{lbl:'Mod',cls:'pb-mod',col:'var(--secondary)'};
+  if(v<=5)return{lbl:'High',cls:'pb-high',col:'var(--pollen)'};
+  return{lbl:'V.High',cls:'pb-vhi',col:'var(--tertiary)'};
+}
+
+function renderPollenPane(){
+  const{grass,tree,weed}=env;
+  const species=[
+    {icon:'🌾',name:'Grass Pollen',val:grass??0,tip:'Highest midday, warm dry days'},
+    {icon:'🌳',name:'Tree Pollen',val:tree??0,tip:'Peaks spring mornings'},
+    {icon:'🌿',name:'Weed / Ragweed',val:weed??0,tip:'Worst late summer & autumn'},
+  ];
+
+  // Meters
+  const maxV=Math.max(...species.map(s=>s.val),0.1);
+  document.getElementById('pollenMeters').innerHTML=species.map(s=>{
+    const lv=pollenLevel(s.val);
+    const w=Math.min(100,(s.val/Math.max(maxV,5))*100);
+    return `<div class="pollen-meter">
+      <div class="pollen-icon">${s.icon}</div>
+      <div class="pollen-info">
+        <div class="pollen-name">${s.name}</div>
+        <div class="pollen-track"><div class="pollen-fill" style="width:${w}%;background:${lv.col}"></div></div>
+      </div>
+      <div class="pollen-val" style="color:${lv.col}">${s.val!=null?s.val.toFixed(1):'—'}</div>
+      <div class="pollen-badge ${lv.cls}">${lv.lbl}</div>
+    </div>`;
+  }).join('');
+
+  // Forecast bars
+  if(pollenForecastData.length){
+    const maxBar=Math.max(...pollenForecastData.map(d=>Math.max(d.grass,d.weed,d.tree)),1);
+    document.getElementById('pollenForecast').innerHTML=pollenForecastData.map((d,i)=>{
+      const total=d.grass+d.weed+d.tree;
+      const h=Math.max(4,Math.round((total/(maxBar*3))*36));
+      const lv=pollenLevel(total/3);
+      return `<div class="pf-day">
+        <div class="pf-day-lbl">${i===0?'Today':d.day}</div>
+        <div class="pf-bar-wrap"><div class="pf-bar" style="height:${h}px;background:${lv.col}"></div></div>
+        <div class="pf-val" style="color:${lv.col}">${lv.lbl}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Alert text
+  const overall=((grass??0)+(tree??0)+(weed??0))/3;
+  const lv=pollenLevel(overall);
+  const alerts={
+    Low:'Air quality looks good for outdoor activities. Pollen counts are low today.',
+    Mod:'Moderate pollen detected. Sensitive individuals may want to limit outdoor exposure midday.',
+    High:'High pollen levels — allergy sufferers should consider indoor activities or a low-pollen route.',
+    'V.High':'Very high pollen alert. Wear a mask outdoors, keep windows closed, shower after being outside.'
+  };
+  document.getElementById('pollenAlertText').textContent=alerts[lv.lbl]||alerts['Mod'];
+
+  // Tips
+  const allTips=[
+    {icon:'🕙',text:'Peak pollen: 10am–3pm. Plan walks early morning or after rain.'},
+    {icon:'😷',text:'N95 masks block pollen effectively for high-sensitivity days.'},
+    {icon:'🚿',text:'Shower and change clothes after outdoor exposure to reduce symptoms.'},
+    {icon:'🪟',text:'Keep windows closed on high pollen days; use AC on recirculate.'},
+    {icon:'🌧️',text:'Rain washes pollen away — great time for outdoor exercise after a shower.'},
+    {icon:'🌿',text:'Grass pollen is highest in open fields. Parks and riverbanks may spike levels.'},
+  ];
+  const showTips=overall>2?allTips:allTips.slice(0,3);
+  document.getElementById('pollenTips').innerHTML=showTips.map(t=>`
+    <div style="background:var(--surface-low);border-radius:12px;padding:11px 12px;display:flex;align-items:flex-start;gap:10px">
+      <span style="font-size:18px;flex-shrink:0">${t.icon}</span>
+      <span style="font-size:.72rem;color:var(--on-surface-var);line-height:1.5">${t.text}</span>
+    </div>`).join('');
+}
+
 // ═══════════ HEALTH ═══════════
 const HEALTH_DESCS={none:'Standard eco routing. No adjustments.',mild:'Mild mode: Avoids AQI > 75. Greener paths preferred.',moderate:'Moderate: Strict AQI < 50 threshold. Pollen + noise considered.',severe:'Severe: Maximum avoidance. Only cleanest air paths.'};
 function setHealth(level,btn){
@@ -1094,7 +1365,7 @@ function setHealth(level,btn){
   document.getElementById('healthDesc').textContent=HEALTH_DESCS[level];
   toast(`Profile: ${level.charAt(0).toUpperCase()+level.slice(1)}`,'info');
   reRank(); updScore(null);
-  const hints={none:'Standard routing — no adjustments.',mild:'Mild: AQI > 75 routes deprioritised.',moderate:'Moderate: Strict thresholds on AQI + noise.',severe:'Severe: Maximum pollution avoidance active.'};
+  const hints={none:'Standard routing — no adjustments.',mild:'Mild: AQI > 75 routes deprioritised.',moderate:'Moderate: Strict thresholds on AQI + noise + pollen.',severe:'Severe: Maximum pollution & pollen avoidance active.'};
   document.getElementById('healthHint').textContent=hints[level];
 }
 function toggleCondition(c,btn){
@@ -1109,7 +1380,6 @@ function toggleCondition(c,btn){
 const CAT_COLORS={campus:'#7c3aed',home:'#006a2b',work:'#2563eb',other:'#765600'};
 const CAT_ICONS={campus:'school',home:'home',work:'business',other:'place'};
 function saveLocs(){localStorage.setItem('eco_locs',JSON.stringify(customLocations));}
-
 function addCustomLocation(name,addr,lat,lon,cat){
   customLocations.push({id:Date.now(),name,addr,lat,lon,cat});
   saveLocs();renderLocList();renderLocMarkers();
@@ -1131,7 +1401,6 @@ function deleteLocation(id){customLocations=customLocations.filter(l=>l.id!==id)
 function useAsFrom(l){setFrom(l.lat,l.lon,l.name);showTab('route');setActiveNav('route');}
 function useAsTo(l){setTo(l.lat,l.lon,l.name);showTab('route');setActiveNav('route');}
 function filterCat(cat,btn){catFilter=cat;document.querySelectorAll('.cat-chip').forEach(p=>p.classList.remove('on'));btn.classList.add('on');renderLocList();}
-
 function renderLocList(){
   const fl=catFilter==='all'?customLocations:customLocations.filter(l=>l.cat===catFilter);
   if(!fl.length){document.getElementById('locList').innerHTML=`<div class="no-routes">${catFilter==='all'?'No saved locations yet.':'No '+catFilter+' locations.'}</div>`;return;}
@@ -1146,7 +1415,6 @@ function renderLocList(){
       </div>
     </div>`).join('');
 }
-
 function renderLocMarkers(){
   locMarkers.forEach(m=>{try{map.removeLayer(m);}catch(e){}});locMarkers=[];
   customLocations.forEach(loc=>{
@@ -1154,11 +1422,10 @@ function renderLocMarkers(){
     const ic=CAT_ICONS[loc.cat]||'place';
     const di=L.divIcon({html:`<div style="background:${c};width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="transform:rotate(45deg);font-size:14px;color:#fff">${ic}</span></div>`,iconSize:[30,30],iconAnchor:[15,30],className:''});
     const m=L.marker([loc.lat,loc.lon],{icon:di}).addTo(map);
-    m.bindPopup(`<div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;margin-bottom:4px">${loc.name}</div><div style="font-size:.72rem;color:var(--on-surface-var)">${loc.addr||loc.cat}</div><div style="display:flex;gap:6px;margin-top:8px"><button onclick="useAsFrom(${JSON.stringify(loc).replace(/"/g,"'")})" style="flex:1;padding:5px;background:var(--primary-container);border:none;border-radius:8px;font-size:.64rem;font-weight:700;cursor:pointer;color:var(--on-primary-cont)">From</button><button onclick="useAsTo(${JSON.stringify(loc).replace(/"/g,"'")})" style="flex:1;padding:5px;background:var(--tertiary-cont);border:none;border-radius:8px;font-size:.64rem;font-weight:700;cursor:pointer;color:var(--on-tertiary-cont)">To</button></div>`);
+    m.bindPopup(`<div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;margin-bottom:4px">${loc.name}</div><div style="font-size:.72rem;color:var(--on-surface-var)">${loc.addr||loc.cat}</div>`);
     locMarkers.push(m);
   });
 }
-
 function togglePinMode(){
   pinDropMode=!pinDropMode;
   document.getElementById('pinBar').classList.toggle('show',pinDropMode);
@@ -1175,7 +1442,11 @@ function toggleNav(){
     btn.innerHTML='<span class="material-symbols-outlined">stop</span>Stop Navigation';
     btn.classList.add('active');
     toast('🧭 Navigation started','success');
-    setTimeout(()=>{if(navOn&&(env.aqi??60)>80)toast(`⚠️ AQI ${Math.round(env.aqi)} zone — stay on eco path`,'warning');},2500);
+    const grassV=env.grass??0;
+    setTimeout(()=>{
+      if(navOn&&(env.aqi??60)>80)toast(`⚠️ AQI ${Math.round(env.aqi)} zone ahead`,'warning');
+      if(navOn&&grassV>3)toast('🌿 High pollen zone — stay on eco path','warning');
+    },2500);
   }else{
     btn.innerHTML='<span class="material-symbols-outlined">near_me</span>Start Navigation';
     btn.classList.remove('active');
@@ -1200,13 +1471,12 @@ function showTab(t){
   document.getElementById('pane-'+t).classList.add('on');
   document.getElementById('tab-'+t).classList.add('on');
   if(sheetState==='peek'){sheetState='half';applySheet();}
+  if(t==='pollen')renderPollenPane();
 }
-
 function setActiveNav(t){
   document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('on'));
   document.getElementById('bnav-'+t)?.classList.add('on');
 }
-
 function setMode(btn,m){
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
@@ -1214,7 +1484,6 @@ function setMode(btn,m){
   toast({walk:'🚶 Walking',bike:'🚲 Cycling',bus:'🚌 Transit',car:'🚗 Driving'}[m],'info');
   if(routeData.length>0)findRoutes();
 }
-
 function toast(msg,type='info'){
   const icons={success:'check_circle',warning:'warning',danger:'error',info:'info'};
   const w=document.getElementById('tw');
@@ -1230,7 +1499,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   initMap();
   renderLocList();
 
-  // Pre-load default campus locations
   if(!customLocations.length){
     customLocations=[
       {id:1,name:'Main Gate',addr:'Campus Main Entrance',lat:26.2485,lon:78.1718,cat:'campus'},
@@ -1241,19 +1509,11 @@ document.addEventListener('DOMContentLoaded',()=>{
     setTimeout(renderLocMarkers,1200);
   }
 
-  // Tap sheet handle area to expand
-  document.getElementById('sheetHandle').addEventListener('click',()=>{
-    if(sheetState==='peek'){sheetState='half';}
-    else if(sheetState==='half'){sheetState='full';}
-    else{sheetState='peek';}
-    applySheet();
-  });
-
   setTimeout(()=>fetchEnv(22.7196,75.8577),800);
   setInterval(()=>fetchEnv(userLat||22.7196,userLon||75.8577),5*60*1000);
 
-  toast('🌿 EcoRoute — tap the sheet to explore','success');
-  setTimeout(()=>toast('📊 Real CSV sensor data loaded','info'),2200);
+  toast('🌿 EcoRoute — swipe up to explore','success');
+  setTimeout(()=>toast('🌿 Pollen tracking is live','info'),2200);
 });
 </script>
 </body>
